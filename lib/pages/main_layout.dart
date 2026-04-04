@@ -98,7 +98,8 @@ class MainLayout extends StatelessWidget {
       _NavItem(icon: Icons.receipt_long, label: '账单记录', index: 0),
       _NavItem(icon: Icons.folder, label: '账本管理', index: 1),
       _NavItem(icon: Icons.bar_chart, label: '数据统计', index: 2),
-      _NavItem(icon: Icons.person, label: '个人信息', index: 3),
+      _NavItem(icon: Icons.account_balance_wallet, label: '资产管理', index: 3),
+      _NavItem(icon: Icons.person, label: '个人信息', index: 4),
     ];
 
     // 确保访问 .value 触发依赖追踪
@@ -158,7 +159,7 @@ class MainLayout extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(12),
         child: InkWell(
-          onTap: () => controller.changePage(3),
+          onTap: () => controller.changePage(4),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(8),

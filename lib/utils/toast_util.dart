@@ -20,16 +20,18 @@ class ToastUtil {
 
   /// 显示 SnackBar
   static void _showSnackBar(String title, String message, Color backgroundColor) {
-    Get.snackbar(
-      title,
-      message,
-      duration: const Duration(seconds: 2),
-      backgroundColor: backgroundColor,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.TOP,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 8,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.snackbar(
+        title,
+        message,
+        duration: const Duration(seconds: 2),
+        backgroundColor: backgroundColor,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+      );
+    });
   }
 
   /// 关闭当前页面

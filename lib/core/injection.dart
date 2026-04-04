@@ -4,6 +4,7 @@ import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/services/expense_service.dart';
 import 'package:journal_windows/services/charts_service.dart';
 import 'package:journal_windows/services/tencent_service.dart';
+import 'package:journal_windows/services/asset_service.dart';
 
 /// 依赖注入初始化
 class Injection {
@@ -13,6 +14,7 @@ class Injection {
     Get.put(ActivityService());
     Get.put(ExpenseService());
     Get.put(ChartsService());
+    Get.put(AssetService());
     TencentService.init();
   }
 }

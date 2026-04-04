@@ -99,4 +99,30 @@ class ApiConfig {
   
   /// 导出Excel
   static String exportCharts(String activityId) => "$baseUrl/charts/export/$activityId";
+
+  // ============ 资产管理接口 ============
+  
+  /// 获取资产概览
+  static String getAssetOverview() => "$baseUrl/asset/overview";
+  
+  /// 获取资产列表
+  static String getAssetList() => "$baseUrl/asset/list";
+  
+  /// 获取资产详情
+  static String getAssetDetail(String assetId) => "$baseUrl/asset/$assetId";
+  
+  /// 创建资产
+  static String createAsset() => "$baseUrl/asset";
+  
+  /// 更新资产
+  static String updateAsset(String assetId) => "$baseUrl/asset/$assetId";
+  
+  /// 删除资产
+  static String deleteAsset(String assetId) => "$baseUrl/asset/$assetId";
+  
+  /// 调整资产余额
+  static String adjustAssetBalance(String assetId) => "$baseUrl/asset/$assetId/adjust";
+  
+  /// 获取资产变动记录
+  static String getAssetRecords(String assetId) => "$baseUrl/asset/$assetId/records";
 }
