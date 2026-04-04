@@ -177,7 +177,6 @@ class AddExpensePage extends StatelessWidget {
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: !controller.isAmountValid.value
                 ? Border.all(color: Colors.redAccent, width: 2)
@@ -187,11 +186,9 @@ class AddExpensePage extends StatelessWidget {
             controller: controller.amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
-              // 只允许输入数字和小数点
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
             ],
             onChanged: (_) {
-              // 输入时清除错误状态
               if (!controller.isAmountValid.value) {
                 controller.isAmountValid.value = true;
               }
@@ -202,19 +199,24 @@ class AddExpensePage extends StatelessWidget {
               color: !controller.isAmountValid.value ? Colors.redAccent : Colors.white,
             ),
             decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.1),
               prefixText: '¥ ',
               prefixStyle: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w500,
-                color: !controller.isAmountValid.value ? Colors.redAccent : Colors.black,
+                color: !controller.isAmountValid.value ? Colors.redAccent : Colors.white,
               ),
               hintText: '0.00',
               hintStyle: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
-                color: Colors.black.withValues(alpha: 1.0),
+                color: Colors.white.withValues(alpha: 0.4),
               ),
-              border: InputBorder.none,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             ),
           ),
@@ -297,21 +299,20 @@ class AddExpensePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: TextField(
-            controller: controller.noteController,
-            maxLines: 2,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: '添加备注...',
-              hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4)),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.all(16),
+        TextField(
+          controller: controller.noteController,
+          maxLines: 2,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            hintText: '添加备注...',
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
             ),
+            contentPadding: const EdgeInsets.all(16),
           ),
         ),
       ],
@@ -387,27 +388,25 @@ class AddExpensePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextField(
-              controller: controller.originalPriceController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                // 只允许输入数字和小数点，最多两位小数
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-              ],
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                prefixText: '¥ ',
-                prefixStyle: const TextStyle(color: Colors.white70),
-                hintText: '如有折扣可填写原价',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          TextField(
+            controller: controller.originalPriceController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+            ],
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.1),
+              prefixText: '¥ ',
+              prefixStyle: const TextStyle(color: Colors.white70),
+              hintText: '如有折扣可填写原价',
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
           ),
         ],
