@@ -119,6 +119,11 @@ class AssetService extends GetxService {
           'remark': remark,
         },
       );
+      final index = assets.indexWhere((a) => a.assetId == assetId);
+      if (index != -1) {
+        assets[index] = assets[index].copyWith(balance: newBalance);
+      }
+      await getOverview();
       return true;
     } catch (e) {
       Log().e('调整余额失败: $e');
