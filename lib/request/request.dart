@@ -48,8 +48,19 @@ class Result<T> {
   Result({this.code, this.msg, this.data});
 
   factory Result.fromJson(Map<String, dynamic> json) {
+    final rawCode = json['code'];
+    int? parsedCode;
+    
+    if (rawCode is int) {
+      parsedCode = rawCode;
+    } else if (rawCode is num) {
+      parsedCode = rawCode.toInt();
+    } else if (rawCode is String) {
+      parsedCode = int.tryParse(rawCode);
+    }
+    
     return Result<T>(
-      code: json['code'] is int ? json['code'] : (json['code'] as num?)?.toInt(),
+      code: parsedCode,
       msg: json['msg']?.toString(),
       data: json['data'],
     );

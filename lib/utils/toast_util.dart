@@ -30,6 +30,8 @@ class ToastUtil {
         snackPosition: SnackPosition.TOP,
         margin: const EdgeInsets.all(16),
         borderRadius: 8,
+        isDismissible: true,
+        dismissDirection: DismissDirection.horizontal,
       );
     });
   }
@@ -41,6 +43,8 @@ class ToastUtil {
     // 使用 Navigator 确保关闭的是页面/Dialog 而不是 Snackbar
     if (Get.context != null) {
       Navigator.of(Get.context!).pop(result);
+    } else {
+      Get.back(result: result);
     }
   }
 

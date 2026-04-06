@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:journal_windows/models/activity.dart';
+import 'package:journal_windows/models/activity_member.dart';
 import 'package:journal_windows/request/request.dart';
 import 'package:journal_windows/config/api_config.dart';
 import 'package:journal_windows/services/storage_service.dart';
@@ -12,6 +13,7 @@ class ActivityService extends GetxService {
   final RxList<Activity> joinedActivities = <Activity>[].obs;
   final Rx<Activity?> currentActivity = Rx<Activity?>(null);
   final RxBool isLoading = false.obs;
+  final RxList<ActivityMember> currentMembers = <ActivityMember>[].obs;
 
   /// 获取我的账本列表
   Future<List<Activity>> getMyActivities() async {
@@ -141,6 +143,10 @@ class ActivityService extends GetxService {
       success: (data) {
         isLoading.value = false;
         myActivities.removeWhere((a) => a.activityId == activityId);
+        joinedActivities.removeWhere((a) => a.activityId == activityId);
+        if (currentActivity.value?.activityId == activityId) {
+          currentActivity.value = null;
+        }
         onSuccess?.call('删除成功');
       },
       fail: (code, msg) {
@@ -219,5 +225,71 @@ class ActivityService extends GetxService {
     joinedActivities.clear();
     currentActivity.value = null;
     isLoading.value = false;
+    currentMembers.clear();
+  }
+
+  /// 获取账本成员列表
+  Future<List<ActivityMember>> getActivityMembers(String activityId) async {
+    isLoading.value = true;
+    try {
+      final result = await HttpRequest.get<List<dynamic>>(
+        ApiConfig.getActivityMembers(activityId),
+      );
+      
+      if (result != null) {
+        currentMembers.value = result.map((e) => ActivityMember.fromJson(e as Map<String, dynamic>)).toList();
+        return currentMembers;
+      }
+    } catch (e) {
+      print('获取账本成员列表失败: $e');
+    } finally {
+      isLoading.value = false;
+    }
+    return [];
+  }
+
+  /// 设置账本内昵称
+  Future<bool> updateNickname(String activityId, String nickname, {String? targetUserId, Function(String)? onSuccess, Function(String)? onFail}) async {
+    isLoading.value = true;
+    
+    await HttpRequest.request(
+      Method.post,
+      ApiConfig.updateActivityNickname(),
+      params: {
+        'activityId': activityId,
+        'nickname': nickname,
+        if (targetUserId != null) 'targetUserId': targetUserId,
+      },
+      success: (data) {
+        isLoading.value = false;
+        onSuccess?.call('设置成功');
+      },
+      fail: (code, msg) {
+        isLoading.value = false;
+        onFail?.call(msg);
+      },
+    );
+    
+    return false;
+  }
+
+  /// 踢出成员（仅创建者可用）
+  Future<bool> kickMember(String activityId, String userId, {Function(String)? onSuccess, Function(String)? onFail}) async {
+    isLoading.value = true;
+    
+    await HttpRequest.request(
+      Method.delete,
+      ApiConfig.kickMember(activityId, userId),
+      success: (data) {
+        isLoading.value = false;
+        onSuccess?.call('移除成功');
+      },
+      fail: (code, msg) {
+        isLoading.value = false;
+        onFail?.call(msg);
+      },
+    );
+    
+    return false;
   }
 }

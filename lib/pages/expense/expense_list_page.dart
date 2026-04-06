@@ -7,6 +7,7 @@ import 'package:journal_windows/models/activity.dart';
 import 'package:journal_windows/models/user.dart';
 import 'package:journal_windows/pages/expense/expense_list_controller.dart';
 import 'package:journal_windows/pages/expense/add_expense_page.dart';
+import 'package:journal_windows/pages/expense/expense_detail_page.dart';
 import 'package:journal_windows/pages/activity/activity_page.dart';
 import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/services/user_service.dart';
@@ -46,25 +47,27 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: NestedScrollView(
-        controller: _scrollController,
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          // 顶部标题栏
-          SliverToBoxAdapter(child: _buildHeader()),
-          // 粘性吸顶卡片
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _ActivityCardDelegate(
-              expandedHeight: _expandedHeight,
-              collapsedHeight: _collapsedHeight,
-              minScale: _minScale,
-              controller: controller,
-              onTap: _onActivityCardTap,
-            ),
-          ),
-        ],
-        body: _buildExpenseList(),
-      ),
+      body: Obx(() {
+        final hasActivity = controller.currentActivity.value != null;
+        return NestedScrollView(
+          controller: _scrollController,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(child: _buildHeader()),
+            if (hasActivity)
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _ActivityCardDelegate(
+                  expandedHeight: _expandedHeight,
+                  collapsedHeight: _collapsedHeight,
+                  minScale: _minScale,
+                  controller: controller,
+                  onTap: _onActivityCardTap,
+                ),
+              ),
+          ],
+          body: _buildExpenseList(),
+        );
+      }),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddExpenseDialog(context),
         icon: const Icon(Icons.add),
@@ -90,7 +93,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
             tooltip: '刷新',
-            onPressed: () => controller.loadExpenses(refresh: true),
+            onPressed: () => controller.loadActivities(),
           ),
           const SizedBox(width: 4),
           // 导出按钮
@@ -162,12 +165,13 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     return Obx(() {
       final isLoading = controller.isLoading.value;
       final expenseList = controller.expenses.toList();
+      final hasActivity = controller.currentActivity.value != null;
 
-      if (isLoading && expenseList.isEmpty) {
+      if (isLoading && expenseList.isEmpty && hasActivity) {
         return const Center(child: CircularProgressIndicator());
       }
 
-      if (controller.currentActivity.value == null) {
+      if (!hasActivity) {
         return _buildEmptyState('请选择一个账本', '点击右上角选择或加入账本');
       }
 
@@ -198,16 +202,56 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   /// 构建空状态提示
   Widget _buildEmptyState(String title, String subtitle) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text(title, style: TextStyle(fontSize: 16, color: Colors.grey[500])),
-          const SizedBox(height: 8),
-          Text(subtitle,
-              style: TextStyle(fontSize: 14, color: Colors.grey[400])),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(title, style: TextStyle(fontSize: 16, color: Colors.grey[500])),
+            const SizedBox(height: 8),
+            Text(subtitle,
+                style: TextStyle(fontSize: 14, color: Colors.grey[400])),
+            const SizedBox(height: 24),
+            if (title == '请选择一个账本') ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Get.dialog<bool>(
+                        ActivityPage(isDialog: true, isReadOnly: false),
+                      );
+                      if (result == true) {
+                        controller.loadActivities();
+                      }
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('创建账本'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D3E50),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await _showJoinActivityDialogAndRefresh();
+                    },
+                    icon: const Icon(Icons.group_add),
+                    label: const Text('加入账本'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF2D3E50),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -354,8 +398,23 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                   style: TextStyle(fontSize: 10, color: Colors.orange[600])),
           ],
         ),
+        onTap: () => _showExpenseDetail(expense),
       ),
     );
+  }
+
+  /// 显示账单详情
+  void _showExpenseDetail(Expense expense) async {
+    final activity = controller.currentActivity.value;
+    if (activity == null) return;
+
+    final result = await Get.dialog<bool>(
+      ExpenseDetailPage(expense: expense, activity: activity),
+    );
+    
+    if (result == true) {
+      controller.loadExpenses(refresh: true);
+    }
   }
 
   /// 根据账单类型获取对应图标
@@ -491,9 +550,21 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
 
   /// 显示加入账本对话框
   void _showJoinActivityDialog() {
+    _showJoinActivityDialogInternal();
+  }
+
+  /// 显示加入账本对话框并在成功后刷新
+  Future<void> _showJoinActivityDialogAndRefresh() async {
+    await _showJoinActivityDialogInternal();
+    controller.loadActivities();
+  }
+
+  /// 内部实现：显示加入账本对话框
+  Future<bool> _showJoinActivityDialogInternal() async {
     final textController = TextEditingController();
     final foundActivity = Rx<Activity?>(null);
     final isSearching = false.obs;
+    final joinSuccess = false.obs;
 
     // 从文本中提取邀请码（格式：ac + 16位字母数字）
     String? regInviteId(String? text) {
@@ -524,7 +595,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
       }
     }
 
-    Get.dialog(
+    await Get.dialog(
       Dialog(
         backgroundColor: const Color(0xFF2D3E50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -542,12 +613,14 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
               const SizedBox(height: 16),
               _buildSearchResult(foundActivity, isSearching),
               const SizedBox(height: 24),
-              _buildDialogButtons(textController, foundActivity, isSearching),
+              _buildDialogButtons(textController, foundActivity, isSearching, joinSuccess),
             ],
           ),
         ),
       ),
     );
+    
+    return joinSuccess.value;
   }
 
   /// 构建对话框头部
@@ -677,6 +750,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     TextEditingController textController,
     Rx<Activity?> foundActivity,
     RxBool isSearching,
+    RxBool joinSuccess,
   ) {
     return Obx(() {
       final hasData = foundActivity.value != null;
@@ -687,7 +761,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
               ? null
               : () {
                   if (hasData) {
-                    _joinActivity(textController.text);
+                    _joinActivity(textController.text, joinSuccess);
                   } else {
                     _searchActivity(
                         textController.text, foundActivity, isSearching);
@@ -735,7 +809,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   }
 
   /// 加入账本
-  void _joinActivity(String text) async {
+  void _joinActivity(String text, RxBool joinSuccess) async {
     final reg = RegExp(r'ac[a-zA-Z0-9]{16}');
     final inviteId = reg.firstMatch(text)?.group(0);
     if (inviteId == null) {
@@ -756,6 +830,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     );
 
     if (success) {
+      joinSuccess.value = true;
       Get.back();
       ToastUtil.showSuccess('加入账本成功');
 
@@ -819,7 +894,8 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
 
     return Obx(() {
       final activity = controller.currentActivity.value;
-      if (activity == null) return _buildEmptyCard();
+      // 如果没有账本，返回空容器（实际上这种情况不会发生，因为父组件已经判断过了）
+      if (activity == null) return const SizedBox.shrink();
 
       return _buildActivityCard(activity, progress, scale);
     });
@@ -828,20 +904,6 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
   // ------------------------------------------------------------
   // 卡片主体
   // ------------------------------------------------------------
-
-  /// 构建空状态卡片（未选择账本时显示）
-  Widget _buildEmptyCard() {
-    return Container(
-      color: const Color(0xFFF5F5F5),
-      padding: const EdgeInsets.all(16),
-      child: Container(
-        height: collapsedHeight - 32,
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(12)),
-        child: const Center(child: Text('请选择一个账本')),
-      ),
-    );
-  }
 
   /// 构建账本卡片主体
   /// [progress] 折叠进度，用于控制内容显示/隐藏

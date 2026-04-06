@@ -159,18 +159,25 @@ class ExpenseListController extends GetxController {
       if (updatedActivity != null) {
         currentActivity.value = updatedActivity;
         _activityService.setCurrentActivity(updatedActivity);
+        await loadExpenses(refresh: true);
       } else {
         // 如果当前账本不在列表中（被删除或退出），清空当前账本
         currentActivity.value = null;
+        _activityService.currentActivity.value = null;
         expenses.clear();
+        hasMore.value = true;
+        _currentPage = 1;
       }
-    }
-
-    // 如果当前没有选中的账本，且有可用账本，自动选择第一个
-    if (currentActivity.value == null && activities.isNotEmpty) {
+    } else if (activities.isNotEmpty) {
+      // 如果当前没有选中的账本，且有可用账本，自动选择第一个
       currentActivity.value = activities.first;
       _activityService.setCurrentActivity(activities.first);
       await loadExpenses(refresh: true);
+    } else {
+      // 没有任何账本，确保数据清空
+      expenses.clear();
+      hasMore.value = true;
+      _currentPage = 1;
     }
   }
 }

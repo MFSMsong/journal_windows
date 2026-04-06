@@ -102,36 +102,44 @@ class ExpenseService extends GetxService {
   }
 
   /// 更新账单
-  Future<bool> updateExpense(Expense expense) async {
+  Future<bool> updateExpense(Expense expense, {Function(String)? onSuccess, Function(String)? onFail}) async {
     isLoading.value = true;
-    try {
-      final result = await HttpRequest.patch<Map<String, dynamic>>(
-        ApiConfig.updateExpense(),
-        data: expense.toJson(),
-      );
-      return result != null;
-    } catch (e) {
-      print('更新账单失败: $e');
-    } finally {
-      isLoading.value = false;
-    }
+    
+    await HttpRequest.request(
+      Method.patch,
+      ApiConfig.updateExpense(),
+      params: expense.toJson(),
+      success: (data) {
+        isLoading.value = false;
+        onSuccess?.call('更新成功');
+      },
+      fail: (code, msg) {
+        isLoading.value = false;
+        onFail?.call(msg);
+      },
+    );
+    
     return false;
   }
 
   /// 删除账单
-  Future<bool> deleteExpense(String expenseId, String activityId) async {
+  Future<bool> deleteExpense(String expenseId, String activityId, {Function(String)? onSuccess, Function(String)? onFail}) async {
     isLoading.value = true;
-    try {
-      final result = await HttpRequest.delete<Map<String, dynamic>>(
-        ApiConfig.deleteExpense(expenseId, activityId),
-      );
-      return result != null;
-    } catch (e) {
-      print('删除账单失败: $e');
-      return false;
-    } finally {
-      isLoading.value = false;
-    }
+    
+    await HttpRequest.request(
+      Method.delete,
+      ApiConfig.deleteExpense(expenseId, activityId),
+      success: (data) {
+        isLoading.value = false;
+        onSuccess?.call('删除成功');
+      },
+      fail: (code, msg) {
+        isLoading.value = false;
+        onFail?.call(msg);
+      },
+    );
+    
+    return false;
   }
 
   /// 清理缓存 - 退出登录时调用

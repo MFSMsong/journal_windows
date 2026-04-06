@@ -83,6 +83,15 @@ class ApiConfig {
   
   /// 判断是否为账本所有者
   static String isActivityOwner() => "$baseUrl/activity/isOwner";
+  
+  /// 获取账本成员列表
+  static String getActivityMembers(String activityId) => "$baseUrl/activity/members/$activityId";
+  
+  /// 设置账本内昵称
+  static String updateActivityNickname() => "$baseUrl/activity/nickname";
+  
+  /// 踢出成员（仅创建者可用）
+  static String kickMember(String activityId, String userId) => "$baseUrl/activity/kick/$activityId/$userId";
 
   // ============ 图表统计接口 ============
   
