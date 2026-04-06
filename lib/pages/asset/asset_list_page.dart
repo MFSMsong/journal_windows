@@ -4,10 +4,18 @@ import 'package:journal_windows/models/asset.dart';
 import 'package:journal_windows/pages/asset/asset_list_controller.dart';
 import 'package:journal_windows/pages/asset/asset_detail_page.dart';
 import 'package:journal_windows/pages/asset/add_asset_dialog.dart';
+import 'package:journal_windows/pages/asset/asset_charts_page.dart';
 import 'package:intl/intl.dart';
 
-class AssetListPage extends StatelessWidget {
+class AssetListPage extends StatefulWidget {
   const AssetListPage({super.key});
+
+  @override
+  State<AssetListPage> createState() => _AssetListPageState();
+}
+
+class _AssetListPageState extends State<AssetListPage> {
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -17,31 +25,34 @@ class AssetListPage extends StatelessWidget {
       body: Column(
         children: [
           _buildHeader(context, controller),
-          Expanded(child: _buildContent(context, controller)),
+          Expanded(child: _buildBody(controller)),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Get.dialog(const AddAssetDialog());
-          if (result == true) {
-            await controller.refresh();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('添加资产'),
-      ),
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Get.dialog(const AddAssetDialog());
+                if (result == true) {
+                  await controller.refresh();
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('添加资产'),
+            )
+          : null,
     );
   }
 
   Widget _buildHeader(BuildContext context, AssetListController controller) {
+    final title = _currentIndex == 0 ? '资产管理' : '资产图表';
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: Row(
         children: [
-          const Text(
-            '资产管理',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -52,9 +63,57 @@ class AssetListPage extends StatelessWidget {
             tooltip: '刷新',
             onPressed: () => controller.refresh(),
           ),
+          const Spacer(),
+          _buildTabButtons(),
         ],
       ),
     );
+  }
+
+  Widget _buildTabButtons() {
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTabButton('资产列表', 0),
+          _buildTabButton('资产图表', 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String label, int index) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? Colors.white : Colors.grey[600],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(AssetListController controller) {
+    if (_currentIndex == 1) {
+      return const AssetChartsPage();
+    }
+    return _buildContent(context, controller);
   }
 
   Widget _buildContent(BuildContext context, AssetListController controller) {
