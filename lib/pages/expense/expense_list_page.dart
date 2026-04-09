@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:collection/collection.dart';
 import 'package:journal_windows/models/expense.dart';
 import 'package:journal_windows/models/activity.dart';
 import 'package:journal_windows/models/user.dart';
@@ -1076,7 +1075,7 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
             left: (displayUsers.length + (remainingCount > 0 ? 1 : 0)) *
                 20.0 *
                 scale,
-            child: _buildAddButton(scale),
+            child: _buildAddButton(scale, activity),
           ),
         ],
       ),
@@ -1135,16 +1134,76 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
   }
 
   /// 构建添加成员按钮
-  Widget _buildAddButton(double scale) {
-    return Container(
-      width: 32 * scale,
-      height: 32 * scale,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFF2D3E50), width: 2),
+  Widget _buildAddButton(double scale, Activity activity) {
+    return GestureDetector(
+      onTap: () {
+        // 阻止事件冒泡，防止触发卡片的点击事件
+        // 显示邀请码对话框
+        _showInviteCodeDialog(activity);
+      },
+      child: Container(
+        width: 32 * scale,
+        height: 32 * scale,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF2D3E50), width: 2),
+        ),
+        child: Icon(Icons.add, size: 16 * scale, color: Colors.white70),
       ),
-      child: Icon(Icons.add, size: 16 * scale, color: Colors.white70),
+    );
+  }
+
+  /// 显示邀请码对话框
+  void _showInviteCodeDialog(Activity activity) {
+    final inviteCode = activity.activityId;
+    Get.dialog(
+      AlertDialog(
+        title: const Text('邀请成员'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('分享以下邀请码给家庭成员：'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      inviteCode,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: inviteCode));
+                      ToastUtil.showSuccess('邀请码已复制');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
     );
   }
 

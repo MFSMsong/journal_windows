@@ -163,23 +163,22 @@ class ChartsController extends GetxController {
   /// 按周聚合
   void _aggregateByWeek() {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
     // 获取本周的开始（周一）
-    final weekday = now.weekday; // 1=Monday, 7=Sunday
-    final startOfWeek = now.subtract(Duration(days: weekday - 1));
+    final weekday = today.weekday; // 1=Monday, 7=Sunday
+    final startOfWeek = today.subtract(Duration(days: weekday - 1));
 
     // 初始化本周每天的数据
     final expenseMap = <String, double>{};
     final incomeMap = <String, double>{};
-    final dateLabels = <String, String>{}; // key -> display label
 
+    // 先初始化所有天的数据
     for (int i = 0; i < 7; i++) {
       final day = startOfWeek.add(Duration(days: i));
       final key = DateFormat('yyyy-MM-dd').format(day);
-      final label = DateFormat('M-d').format(day); // 显示为 "3-26" 格式
       expenseMap[key] = 0;
       incomeMap[key] = 0;
-      dateLabels[key] = label;
     }
 
     // 聚合数据
@@ -200,10 +199,13 @@ class ChartsController extends GetxController {
       }
     }
 
-    // 转换为列表并排序
-    final sortedKeys = expenseMap.keys.toList()..sort();
-    for (final key in sortedKeys) {
-      final label = dateLabels[key] ?? key;
+    // 按顺序生成数据（从周一到周日）
+    periodExpenses.clear();
+    periodIncome.clear();
+    for (int i = 0; i < 7; i++) {
+      final day = startOfWeek.add(Duration(days: i));
+      final key = DateFormat('yyyy-MM-dd').format(day);
+      final label = DateFormat('M-d').format(day);
       periodExpenses.add(MapEntry(label, expenseMap[key] ?? 0));
       periodIncome.add(MapEntry(label, incomeMap[key] ?? 0));
     }
@@ -248,8 +250,14 @@ class ChartsController extends GetxController {
       }
     }
 
-    periodExpenses.addAll(expenseMap.entries);
-    periodIncome.addAll(incomeMap.entries);
+    // 按顺序生成数据（从1日到最后一天）
+    periodExpenses.clear();
+    periodIncome.clear();
+    for (int i = 1; i <= daysInMonth; i++) {
+      final key = i.toString().padLeft(2, '0');
+      periodExpenses.add(MapEntry(key, expenseMap[key] ?? 0));
+      periodIncome.add(MapEntry(key, incomeMap[key] ?? 0));
+    }
   }
 
   /// 按年聚合（显示1-12月）
@@ -287,8 +295,14 @@ class ChartsController extends GetxController {
       }
     }
 
-    periodExpenses.addAll(expenseMap.entries);
-    periodIncome.addAll(incomeMap.entries);
+    // 按顺序生成数据（从1月到12月）
+    periodExpenses.clear();
+    periodIncome.clear();
+    for (int i = 1; i <= 12; i++) {
+      final key = '$i月';
+      periodExpenses.add(MapEntry(key, expenseMap[key] ?? 0));
+      periodIncome.add(MapEntry(key, incomeMap[key] ?? 0));
+    }
   }
 
   /// 按类型聚合数据（所有账本时使用）

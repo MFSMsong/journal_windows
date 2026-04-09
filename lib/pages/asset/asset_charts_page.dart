@@ -65,7 +65,7 @@ class AssetChartsPage extends StatelessWidget {
 
   Widget _buildContent(AssetChartsController controller) {
     return Obx(() {
-      if (controller.isLoading.value && controller.assets.isEmpty) {
+      if (controller.assetService.isLoading.value && controller.assetService.assets.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
 
@@ -107,7 +107,7 @@ class AssetChartsPage extends StatelessWidget {
 
   Widget _buildOverviewCard(AssetChartsController controller) {
     return Obx(() {
-      final overview = controller.overview.value;
+      final overview = controller.assetService.overview.value;
       final tab = controller.selectedTab.value;
 
       double displayValue;
@@ -567,7 +567,7 @@ class AssetChartsPage extends StatelessWidget {
   /// 净资产状况卡片
   Widget _buildNetAssetStatusCard(AssetChartsController controller) {
     return Obx(() {
-      final overview = controller.overview.value;
+      final overview = controller.assetService.overview.value;
       final totalAsset = overview?.totalAsset ?? 0;
       final totalLiability = overview?.totalLiability ?? 0;
       final netAsset = overview?.netAsset ?? 0;

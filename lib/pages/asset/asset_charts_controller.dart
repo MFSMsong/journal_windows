@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/models/asset.dart';
 import 'package:journal_windows/services/asset_service.dart';
-import 'package:journal_windows/utils/toast_util.dart';
 
 class AssetChartsController extends GetxController {
   final AssetService assetService = AssetService.to;
 
-  final isLoading = false.obs;
   final selectedTab = 'asset'.obs;
   final selectedYear = DateTime.now().year.obs;
-
-  final assets = <Asset>[].obs;
-  final overview = Rx<AssetOverview?>(null);
 
   final trendData = <MapEntry<String, double>>[].obs;
   final distributionData = <AssetDistributionItem>[].obs;
@@ -35,21 +30,13 @@ class AssetChartsController extends GetxController {
   void onInit() {
     super.onInit();
     loadData();
+    ever(assetService.assets, (_) => _processData());
+    ever(assetService.overview, (_) => _processData());
   }
 
   Future<void> loadData() async {
-    if (isLoading.value) return;
-    isLoading.value = true;
-    try {
-      await assetService.refresh();
-      assets.value = assetService.assets;
-      overview.value = assetService.overview.value;
-      _processData();
-    } catch (e) {
-      ToastUtil.showError('加载资产数据失败');
-    } finally {
-      isLoading.value = false;
-    }
+    await assetService.refresh();
+    _processData();
   }
 
   void _processData() {
@@ -82,24 +69,24 @@ class AssetChartsController extends GetxController {
   List<Asset> _getFilteredAssets() {
     switch (selectedTab.value) {
       case 'asset':
-        return assets.where((a) => !a.isLiability).toList();
+        return assetService.assets.where((a) => !a.isLiability).toList();
       case 'liability':
-        return assets.where((a) => a.isLiability).toList();
+        return assetService.assets.where((a) => a.isLiability).toList();
       case 'netAsset':
-        return assets;
+        return assetService.assets;
       default:
-        return assets;
+        return assetService.assets;
     }
   }
 
   double _getTotalValue() {
     switch (selectedTab.value) {
       case 'asset':
-        return overview.value?.totalAsset ?? 0;
+        return assetService.overview.value?.totalAsset ?? 0;
       case 'liability':
-        return overview.value?.totalLiability ?? 0;
+        return assetService.overview.value?.totalLiability ?? 0;
       case 'netAsset':
-        return overview.value?.netAsset ?? 0;
+        return assetService.overview.value?.netAsset ?? 0;
       default:
         return 0;
     }
