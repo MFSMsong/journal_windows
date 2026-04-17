@@ -126,9 +126,7 @@ class ExpenseListController extends GetxController {
 
     if (success) {
       ToastUtil.showSuccess('删除成功');
-      await loadExpenses(refresh: true);
-      await _activityService.getCurrentActivity();
-      currentActivity.value = _activityService.currentActivity.value;
+      await loadActivities();
     }
   }
 

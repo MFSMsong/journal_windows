@@ -4,9 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:journal_windows/models/activity.dart';
 import 'package:journal_windows/models/expense.dart';
 import 'package:journal_windows/services/expense_service.dart';
-import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/pages/expense/expense_list_controller.dart';
-import 'package:journal_windows/routers.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 
 /// 添加账单控制器
@@ -16,7 +14,6 @@ class AddExpenseController extends GetxController {
   AddExpenseController(this.activity);
 
   final ExpenseService _expenseService = ExpenseService.to;
-  final ActivityService _activityService = ActivityService.to;
 
   final amountController = TextEditingController();
   final noteController = TextEditingController();
@@ -174,11 +171,9 @@ class AddExpenseController extends GetxController {
 
     if (result != null) {
       ToastUtil.showSuccess('保存成功');
-      // 刷新账本信息
-      await _activityService.getCurrentActivity();
-      // 刷新账单列表
+      // 刷新账本列表和当前账本信息（包括总支出等统计数据）
       final expenseListController = Get.find<ExpenseListController>();
-      await expenseListController.loadExpenses(refresh: true);
+      await expenseListController.loadActivities();
       return true;
     }
 

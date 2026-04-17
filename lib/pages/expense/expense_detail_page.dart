@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:journal_windows/models/expense.dart';
 import 'package:journal_windows/models/activity.dart';
 import 'package:journal_windows/services/expense_service.dart';
-import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/pages/expense/expense_list_controller.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
@@ -696,9 +695,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       updatedExpense,
       onSuccess: (msg) async {
         setState(() => _isSaving = false);
-        await ActivityService.to.getCurrentActivity();
         final expenseListController = Get.find<ExpenseListController>();
-        await expenseListController.loadExpenses(refresh: true);
+        await expenseListController.loadActivities();
         ToastUtil.closePage(result: true);
       },
       onFail: (msg) {
@@ -739,9 +737,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
       widget.expense.expenseId,
       widget.expense.activityId,
       onSuccess: (msg) async {
-        await ActivityService.to.getCurrentActivity();
         final expenseListController = Get.find<ExpenseListController>();
-        await expenseListController.loadExpenses(refresh: true);
+        await expenseListController.loadActivities();
         ToastUtil.closePage(result: true);
       },
       onFail: (msg) {
