@@ -146,6 +146,7 @@ class ActivityService extends GetxService {
         joinedActivities.removeWhere((a) => a.activityId == activityId);
         if (currentActivity.value?.activityId == activityId) {
           currentActivity.value = null;
+          StorageService.removeCurrentActivityId();
         }
         onSuccess?.call('删除成功');
       },

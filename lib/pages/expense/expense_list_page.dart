@@ -599,17 +599,16 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
         backgroundColor: const Color(0xFF2D3E50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
-          width: 450,
-          padding: const EdgeInsets.all(24),
+          width: 420,
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildDialogHeader(),
-              const SizedBox(height: 20),
               _buildSearchInput(
                   textController, foundActivity, isSearching, readClipboard),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _buildSearchResult(foundActivity, isSearching),
               const SizedBox(height: 24),
               _buildDialogButtons(textController, foundActivity, isSearching, joinSuccess),
@@ -624,25 +623,37 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
 
   /// 构建对话框头部
   Widget _buildDialogHeader() {
-    return Row(
+    return Column(
       children: [
-        IconButton(
-          onPressed: () => Get.back(),
-          icon:
-              const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 20),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
+        // 标题栏
+        Row(
+          children: [
+            IconButton(
+              onPressed: () => Get.back(),
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 18),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const Expanded(
+              child: Center(
+                child: Text('加入账本',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white)),
+              ),
+            ),
+            const SizedBox(width: 40),
+          ],
         ),
-        const Expanded(
-          child: Center(
-            child: Text('加入账本',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
-          ),
+        const SizedBox(height: 24),
+        // 邀请码标签
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('邀请码 / 口令',
+              style: TextStyle(fontSize: 13, color: Colors.white54)),
         ),
-        const SizedBox(width: 40),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -654,31 +665,46 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     RxBool isSearching,
     VoidCallback readClipboard,
   ) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: TextField(
-            controller: textController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: '输入邀请码',
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-              filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.1),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        // 输入框
+        TextField(
+          controller: textController,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            hintText: '粘贴或输入邀请码',
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+            prefixIcon: Icon(Icons.search, color: Colors.white.withValues(alpha: 0.5), size: 20),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
             ),
-            onChanged: (value) => foundActivity.value = null,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
+          onChanged: (value) => foundActivity.value = null,
         ),
-        const SizedBox(width: 8),
-        IconButton(
-          onPressed: readClipboard,
-          icon: const Icon(Icons.paste, color: Colors.white70),
-          tooltip: '粘贴',
+        const SizedBox(height: 12),
+        // 从剪贴板读取按钮
+        GestureDetector(
+          onTap: readClipboard,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.content_paste, size: 16, color: Colors.white.withValues(alpha: 0.6)),
+                const SizedBox(width: 8),
+                Text('从剪贴板读取', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -688,39 +714,52 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   Widget _buildSearchResult(Rx<Activity?> foundActivity, RxBool isSearching) {
     return Obx(() {
       if (isSearching.value) {
-        return const Center(
-            child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator()));
+        return Container(
+          padding: const EdgeInsets.all(32),
+          child: const Center(child: CircularProgressIndicator(color: Colors.white54)),
+        );
       }
 
       final activity = foundActivity.value;
       if (activity != null) {
+        // 找到账本，显示账本卡片
         return Container(
-          padding: const EdgeInsets.all(16),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(activity.activityName,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-              const SizedBox(height: 8),
+              // 账本图标
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(Icons.book, size: 32, color: const Color(0xFF2D3E50)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // 账本名称
+              Text(activity.activityName,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
+              const SizedBox(height: 8),
+              // 创建者标签
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   '由 ${activity.creatorName} 创建',
-                  style: TextStyle(
-                      fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
+                  style: const TextStyle(fontSize: 13, color: Colors.white70),
                 ),
               ),
             ],
@@ -728,19 +767,23 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
         );
       }
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Column(
-          children: [
-            Icon(Icons.search,
-                size: 48, color: Colors.white.withValues(alpha: 0.3)),
-            const SizedBox(height: 12),
-            Text('输入邀请码以查找账本',
-                style: TextStyle(
-                    fontSize: 14, color: Colors.white.withValues(alpha: 0.5))),
-          ],
+      // 未找到账本，显示提示
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 48),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.search, size: 48, color: Colors.white.withValues(alpha: 0.25)),
+              const SizedBox(height: 16),
+              Text('输入邀请码以查找账本',
+                  style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.4))),
+            ],
+          ),
         ),
       );
+
     });
   }
 
@@ -753,31 +796,36 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   ) {
     return Obx(() {
       final hasData = foundActivity.value != null;
+      final isEnabled = !isSearching.value && (hasData || textController.text.isNotEmpty);
+      
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: isSearching.value
-              ? null
-              : () {
+          onPressed: isEnabled
+              ? () {
                   if (hasData) {
                     _joinActivity(textController.text, joinSuccess);
                   } else {
-                    _searchActivity(
-                        textController.text, foundActivity, isSearching);
+                    _searchActivity(textController.text, foundActivity, isSearching);
                   }
-                },
+                }
+              : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                hasData ? Colors.white : Colors.white.withValues(alpha: 0.3),
+            backgroundColor: hasData ? Colors.white : Colors.white.withValues(alpha: 0.15),
             foregroundColor: const Color(0xFF2D3E50),
+            disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
+            disabledForegroundColor: Colors.white.withValues(alpha: 0.3),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            disabledBackgroundColor: Colors.white.withValues(alpha: 0.2),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            elevation: 0,
           ),
           child: Text(
             hasData ? '确认加入' : '查找账本',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: hasData ? const Color(0xFF2D3E50) : Colors.white.withValues(alpha: isEnabled ? 0.9 : 0.3),
+            ),
           ),
         ),
       );
@@ -1157,52 +1205,213 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
   /// 显示邀请码对话框
   void _showInviteCodeDialog(Activity activity) {
     final inviteCode = activity.activityId;
+    final userList = activity.userList ?? [];
+    
     Get.dialog(
-      AlertDialog(
-        title: const Text('邀请成员'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('分享以下邀请码给家庭成员：'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      Dialog(
+        backgroundColor: const Color(0xFF2D3E50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 400,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 标题栏
+              Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      inviteCode,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                      ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 18),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text('邀请成员',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.copy),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: inviteCode));
-                      ToastUtil.showSuccess('邀请码已复制');
-                    },
-                  ),
+                  const SizedBox(width: 40),
                 ],
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('关闭'),
+              const SizedBox(height: 20),
+              
+              // 账本信息卡片
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          activity.activityName.isNotEmpty ? activity.activityName.substring(0, 1) : '?',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('邀请加入', style: TextStyle(fontSize: 12, color: Colors.white54)),
+                          const SizedBox(height: 2),
+                          Text(activity.activityName,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // 邀请码区域
+              const Text('专属邀请码（点击复制）',
+                  style: TextStyle(fontSize: 13, color: Colors.white54)),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: inviteCode));
+                  ToastUtil.showSuccess('邀请码已复制');
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.copy, size: 18, color: Colors.white.withValues(alpha: 0.6)),
+                      const SizedBox(width: 8),
+                      Text(
+                        inviteCode.length > 16 ? '${inviteCode.substring(0, 16)}...' : inviteCode,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // 已加入成员
+              if (userList.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Text('已加入成员 ${userList.length} 人',
+                        style: const TextStyle(fontSize: 14, color: Colors.white70)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 150),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: userList.length,
+                    itemBuilder: (context, index) {
+                      final user = userList[index];
+                      final isCreator = user.userId == activity.userId;
+                      final hasAvatar = user.avatarUrl.isNotEmpty;
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: hasAvatar ? null : Colors.amber,
+                                shape: BoxShape.circle,
+                                image: hasAvatar
+                                    ? DecorationImage(image: NetworkImage(user.avatarUrl), fit: BoxFit.cover)
+                                    : null,
+                              ),
+                              child: !hasAvatar
+                                  ? Center(
+                                      child: Text(
+                                        user.nickname.isNotEmpty ? user.nickname.substring(0, 1) : '?',
+                                        style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.bold),
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(user.nickname,
+                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white)),
+                                      if (isCreator) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text('创建者', style: TextStyle(fontSize: 11, color: Colors.white70)),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text('1970-01-01 加入',
+                                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              
+              // 底部分享按钮
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: inviteCode));
+                    ToastUtil.showSuccess('邀请码已复制，可分享给好友');
+                  },
+                  icon: const Icon(Icons.share, size: 18),
+                  label: const Text('分享完整邀请码'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF2D3E50),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

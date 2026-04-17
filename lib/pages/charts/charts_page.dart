@@ -681,15 +681,16 @@ class ChartsPage extends StatelessWidget {
       }
       if (maxValue == 0) maxValue = 1;
 
-      // 合并数据并排序
-      final allKeys = <String>{};
-      for (var e in displayExpenses) {
-        allKeys.add(e.key);
+      // 直接使用 controller 中已排序的数据顺序，不重新排序
+      // 因为字符串排序会导致 "10月" 排在 "2月" 前面
+      final List<String> sortedKeys;
+      if (displayExpenses.isNotEmpty) {
+        sortedKeys = displayExpenses.map((e) => e.key).toList();
+      } else if (displayIncome.isNotEmpty) {
+        sortedKeys = displayIncome.map((e) => e.key).toList();
+      } else {
+        sortedKeys = [];
       }
-      for (var i in displayIncome) {
-        allKeys.add(i.key);
-      }
-      final sortedKeys = allKeys.toList()..sort();
 
       // 判断是否按月统计（需要间隔显示横坐标）
       final isMonthView = controller.selectedPeriod.value == 'month';

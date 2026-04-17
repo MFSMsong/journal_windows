@@ -4,6 +4,7 @@ import 'package:journal_windows/models/expense.dart';
 import 'package:journal_windows/models/activity.dart';
 import 'package:journal_windows/services/expense_service.dart';
 import 'package:journal_windows/services/activity_service.dart';
+import 'package:journal_windows/services/storage_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 
 /// 账单列表控制器
@@ -164,6 +165,7 @@ class ExpenseListController extends GetxController {
         // 如果当前账本不在列表中（被删除或退出），清空当前账本
         currentActivity.value = null;
         _activityService.currentActivity.value = null;
+        StorageService.removeCurrentActivityId();
         expenses.clear();
         hasMore.value = true;
         _currentPage = 1;
