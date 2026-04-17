@@ -17,6 +17,7 @@ class ExpenseListController extends GetxController {
   final Rx<Activity?> currentActivity = Rx<Activity?>(null);
   final RxBool isLoading = false.obs;
   final RxBool hasMore = true.obs;
+  final RxString highlightExpenseId = ''.obs;
   
   int _currentPage = 1;
   final int _pageSize = 20;
@@ -179,5 +180,15 @@ class ExpenseListController extends GetxController {
       hasMore.value = true;
       _currentPage = 1;
     }
+  }
+
+  /// 设置需要高亮的账单ID
+  void setHighlightExpenseId(String expenseId) {
+    highlightExpenseId.value = expenseId;
+  }
+
+  /// 清除高亮
+  void clearHighlight() {
+    highlightExpenseId.value = '';
   }
 }

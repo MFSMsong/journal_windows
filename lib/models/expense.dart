@@ -7,6 +7,7 @@ class Expense {
   String label;
   String userId;
   String activityId;
+  String? activityName;
   int positive;
   String? userNickname;
   String? userAvatar;
@@ -23,6 +24,7 @@ class Expense {
     required this.label,
     required this.userId,
     required this.activityId,
+    this.activityName,
     required this.positive,
     this.userNickname,
     this.userAvatar,
@@ -41,6 +43,7 @@ class Expense {
       label: json['label'] ?? '',
       userId: json['userId'] ?? '',
       activityId: json['activityId'] ?? '',
+      activityName: json['activityName'],
       positive: json['positive'] ?? 0,
       userNickname: json['userNickname'],
       userAvatar: json['userAvatar'],
@@ -62,6 +65,7 @@ class Expense {
       'label': label,
       'userId': userId,
       'activityId': activityId,
+      'activityName': activityName,
       'positive': positive,
       'userNickname': userNickname,
       'userAvatar': userAvatar,
@@ -93,6 +97,7 @@ class Expense {
       label: '',
       userId: '',
       activityId: '',
+      activityName: null,
       positive: 0,
       expenseTime: '',
       createTime: '',
@@ -109,6 +114,7 @@ class Expense {
     String? label,
     String? userId,
     String? activityId,
+    String? activityName,
     int? positive,
     String? userNickname,
     String? userAvatar,
@@ -125,6 +131,7 @@ class Expense {
       label: label ?? this.label,
       userId: userId ?? this.userId,
       activityId: activityId ?? this.activityId,
+      activityName: activityName ?? this.activityName,
       positive: positive ?? this.positive,
       userNickname: userNickname ?? this.userNickname,
       userAvatar: userAvatar ?? this.userAvatar,

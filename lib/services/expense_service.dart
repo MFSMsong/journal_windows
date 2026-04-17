@@ -149,4 +149,25 @@ class ExpenseService extends GetxService {
     hasMore.value = true;
     _currentPage = 1;
   }
+
+  /// 全局搜索账单
+  Future<List<Expense>> searchExpense(String keyword) async {
+    if (keyword.trim().isEmpty) return [];
+    
+    isLoading.value = true;
+    try {
+      final result = await HttpRequest.get<List<dynamic>>(
+        ApiConfig.searchExpense(keyword),
+      );
+      
+      if (result != null) {
+        return result.map((e) => Expense.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print('搜索账单失败: $e');
+    } finally {
+      isLoading.value = false;
+    }
+    return [];
+  }
 }

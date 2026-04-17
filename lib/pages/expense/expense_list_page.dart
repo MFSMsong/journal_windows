@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:journal_windows/models/expense.dart';
@@ -9,6 +9,7 @@ import 'package:journal_windows/pages/expense/add_expense_page.dart';
 import 'package:journal_windows/pages/expense/expense_detail_page.dart';
 import 'package:journal_windows/pages/activity/activity_page.dart';
 import 'package:journal_windows/services/activity_service.dart';
+import 'package:journal_windows/services/expense_service.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/services/excel_export_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
@@ -101,6 +102,8 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
             tooltip: '导出Excel',
             onPressed: _exportToExcel,
           ),
+          const SizedBox(width: 12),
+          _buildGlobalSearchInput(),
           const Spacer(),
           _buildJoinActivityButton(),
           const SizedBox(width: 12),
@@ -108,6 +111,286 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
         ],
       ),
     );
+  }
+
+  /// 构建全局搜索输入框
+  Widget _buildGlobalSearchInput() {
+    return SizedBox(
+      width: 200,
+      height: 36,
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: '搜索账单',
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 18),
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          isDense: true,
+        ),
+        style: const TextStyle(fontSize: 13),
+        onSubmitted: (value) {
+          if (value.trim().isNotEmpty) {
+            _showSearchResults(value.trim());
+          }
+        },
+      ),
+    );
+  }
+
+  /// 显示搜索结果弹窗
+  void _showSearchResults(String keyword) async {
+    final results = await ExpenseService.to.searchExpense(keyword);
+    
+    if (!mounted) return;
+    
+    if (results.isEmpty) {
+      ToastUtil.showInfo('未找到相关账单');
+      return;
+    }
+    
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 500,
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSearchDialogHeader(keyword, results.length),
+              Flexible(child: _buildSearchResultsList(results)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建搜索结果弹窗头部
+  Widget _buildSearchDialogHeader(String keyword, int count) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2D3E50),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.white.withValues(alpha: 0.8), size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '搜索 "$keyword" 的结果 ($count 条)',
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Get.back(),
+            icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建搜索结果列表
+  Widget _buildSearchResultsList(List<Expense> results) {
+    return ListView.separated(
+      shrinkWrap: true,
+      padding: const EdgeInsets.all(8),
+      itemCount: results.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final expense = results[index];
+        return _buildSearchResultItem(expense);
+      },
+    );
+  }
+
+  /// 构建单条搜索结果
+  Widget _buildSearchResultItem(Expense expense) {
+    final isExpense = expense.isExpense;
+    final color = isExpense ? Colors.red : Colors.green;
+    
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          isExpense ? Icons.remove_circle_outline : Icons.add_circle_outline,
+          color: color,
+          size: 24,
+        ),
+      ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              expense.type,
+              style: TextStyle(fontSize: 11, color: color),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              expense.label.isNotEmpty ? expense.label : '无备注',
+              style: const TextStyle(fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      subtitle: Row(
+        children: [
+          if (expense.activityName != null) ...[
+            Icon(Icons.folder_outlined, size: 12, color: Colors.grey[400]),
+            const SizedBox(width: 4),
+            Text(
+              expense.activityName!,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Icon(Icons.access_time, size: 12, color: Colors.grey[400]),
+          const SizedBox(width: 4),
+          Text(
+            _formatDate(expense.expenseTime),
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '${isExpense ? "-" : "+"}¥${expense.price.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Tooltip(
+            message: '跳转到账本',
+            child: InkWell(
+              onTap: () => _jumpToExpense(expense),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                child: Icon(
+                  Icons.open_in_new,
+                  size: 18,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      onTap: () {
+        Get.dialog(
+          ExpenseDetailPage(
+            expense: expense,
+            activity: Activity(
+              activityId: expense.activityId,
+              activityName: expense.activityName ?? '',
+              userId: '',
+              creatorName: '',
+              activated: true,
+              createTime: '',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 跳转到账单所在账本并定位
+  void _jumpToExpense(Expense expense) async {
+    Get.back();
+    
+    final targetActivityId = expense.activityId;
+    final targetExpenseId = expense.expenseId;
+    
+    final targetActivity = controller.activities.firstWhereOrNull(
+      (a) => a.activityId == targetActivityId,
+    );
+    
+    if (targetActivity == null) {
+      ToastUtil.showError('未找到该账本');
+      return;
+    }
+    
+    if (controller.currentActivity.value?.activityId != targetActivityId) {
+      await controller.selectActivity(targetActivity);
+    }
+    
+    controller.setHighlightExpenseId(targetExpenseId);
+    
+    await Future.delayed(const Duration(milliseconds: 500));
+    _scrollToExpense(targetExpenseId);
+    
+    Future.delayed(const Duration(seconds: 3), () {
+      controller.clearHighlight();
+    });
+  }
+
+  /// 滚动到指定账单
+  void _scrollToExpense(String expenseId) {
+    final index = controller.expenses.indexWhere((e) => e.expenseId == expenseId);
+    if (index == -1) {
+      ToastUtil.showInfo('该记录不在当前页面，请向下滚动查找');
+      return;
+    }
+    
+    final itemHeight = 72.0;
+    final headerHeight = 40.0;
+    
+    int itemIndex = 0;
+    final groupedExpenses = _groupExpensesByDate(controller.expenses);
+    for (final group in groupedExpenses) {
+      final expenses = group['expenses'] as List<Expense>;
+      for (final e in expenses) {
+        if (e.expenseId == expenseId) {
+          final offset = itemIndex * itemHeight + groupedExpenses.indexOf(group) * headerHeight - 100;
+          _scrollController.animateTo(
+            offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+          return;
+        }
+        itemIndex++;
+      }
+    }
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr.replaceAll(' ', 'T'));
+      return '${date.month}月${date.day}日';
+    } catch (e) {
+      return dateStr.substring(0, 10);
+    }
   }
 
   /// 构建加入账本按钮
@@ -325,81 +608,89 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     final time = expense.expenseTime.split(' ')[1].substring(0, 5);
     final userName = expense.userNickname ?? '未知用户';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: isExpense
-                ? Colors.red.withValues(alpha: 0.1)
-                : Colors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(_getExpenseIcon(expense.type),
-              color: isExpense ? Colors.red : Colors.green),
+    return Obx(() {
+      final isHighlighted = controller.highlightExpenseId.value == expense.expenseId;
+      
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: isHighlighted ? Colors.yellow.withValues(alpha: 0.3) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isHighlighted ? Border.all(color: Colors.orange, width: 2) : null,
         ),
-        title: Row(
-          children: [
-            Text(expense.type,
-                style:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-            if (expense.label.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  expense.label,
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.normal),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Row(
-            children: [
-              Text(time,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(4)),
-                child: Text(userName,
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-              ),
-            ],
-          ),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${isExpense ? "-" : "+"}${expense.price.toStringAsFixed(1)}',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isExpense ? Colors.red : Colors.green),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: isExpense
+                  ? Colors.red.withValues(alpha: 0.1)
+                  : Colors.green.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            if (expense.hasDiscount)
-              Text('省¥${expense.savedAmount.toStringAsFixed(0)}',
-                  style: TextStyle(fontSize: 10, color: Colors.orange[600])),
-          ],
+            child: Icon(_getExpenseIcon(expense.type),
+                color: isExpense ? Colors.red : Colors.green),
+          ),
+          title: Row(
+            children: [
+              Text(expense.type,
+                  style:
+                      const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+              if (expense.label.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    expense.label,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.normal),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Text(time,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(4)),
+                  child: Text(userName,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                ),
+              ],
+            ),
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${isExpense ? "-" : "+"}${expense.price.toStringAsFixed(1)}',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isExpense ? Colors.red : Colors.green),
+              ),
+              if (expense.hasDiscount)
+                Text('省¥${expense.savedAmount.toStringAsFixed(0)}',
+                    style: TextStyle(fontSize: 10, color: Colors.orange[600])),
+            ],
+          ),
+          onTap: () => _showExpenseDetail(expense),
         ),
-        onTap: () => _showExpenseDetail(expense),
-      ),
-    );
+      );
+    });
   }
 
   /// 显示账单详情

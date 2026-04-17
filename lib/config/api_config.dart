@@ -51,6 +51,9 @@ class ApiConfig {
   /// 删除账单
   static String deleteExpense(String expenseId, String activityId) => 
       "$baseUrl/expense/$expenseId/$activityId";
+  
+  /// 全局搜索账单
+  static String searchExpense(String keyword) => "$baseUrl/expense/search?keyword=${Uri.encodeComponent(keyword)}";
 
   // ============ 账本相关接口 ============
   
