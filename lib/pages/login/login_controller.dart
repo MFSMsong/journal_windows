@@ -90,21 +90,6 @@ class LoginController extends GetxController {
     return true;
   }
 
-  /// 验证密码格式
-  bool _validatePassword(String password) {
-    if (password.isEmpty) {
-      ToastUtil.showInfo('请输入密码');
-      return false;
-    }
-
-    if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$').hasMatch(password)) {
-      ToastUtil.showInfo('密码格式错误，需6-20位字母数字组合');
-      return false;
-    }
-
-    return true;
-  }
-
   /// 开始倒计时
   void _startCountdown() {
     countdown.value = 60;
@@ -175,7 +160,10 @@ class LoginController extends GetxController {
   Future<void> _loginWithPassword(String email) async {
     final password = passwordController.text.trim();
     
-    if (!_validatePassword(password)) return;
+    if (password.isEmpty) {
+      ToastUtil.showInfo('请输入密码');
+      return;
+    }
     
     isLoading.value = true;
     

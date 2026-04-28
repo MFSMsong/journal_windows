@@ -93,11 +93,18 @@ class UserService extends GetxService {
   Future<bool> deleteUser() async {
     isLoading.value = true;
     try {
-      final result = await HttpRequest.delete<Map<String, dynamic>>(
+      bool success = false;
+      await HttpRequest.delete<Map<String, dynamic>>(
         ApiConfig.deleteUser(),
+        success: (data) {
+          success = true;
+        },
+        fail: (code, msg) {
+          print('删除用户失败: code=$code, msg=$msg');
+        },
       );
       
-      if (result != null) {
+      if (success) {
         await logout();
         return true;
       }

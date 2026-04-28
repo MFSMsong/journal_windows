@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:journal_windows/models/user.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
+import 'package:journal_windows/routers.dart';
 
 /// 个人信息控制器
 class ProfileController extends GetxController {
@@ -18,6 +19,9 @@ class ProfileController extends GetxController {
     final success = await userService.deleteUser();
     if (success) {
       ToastUtil.showSuccess('账户已删除');
+      Get.offAllNamed(Routers.LoginPageUrl);
+    } else {
+      ToastUtil.showError('删除账户失败，请重试');
     }
   }
 }
