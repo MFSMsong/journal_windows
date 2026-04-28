@@ -11,14 +11,32 @@ class ApiConfig {
 
   // ============ 用户相关接口 ============
   
-  /// 发送短信验证码
-  static String sendSmsCode() => "$baseUrl/user/login/smsCode";
-  
-  /// 发送邮箱验证码
+  /// 发送邮箱验证码（登录）
   static String sendEmailCode() => "$baseUrl/user/login/emailCode";
   
-  /// 登录（手机号/邮箱）
+  /// 发送邮箱验证码（注册）
+  static String sendRegisterEmailCode() => "$baseUrl/user/register/emailCode";
+  
+  /// 发送邮箱验证码（修改密码）
+  static String sendPasswordEmailCode() => "$baseUrl/user/password/emailCode";
+  
+  /// 登录（邮箱验证码）
   static String login() => "$baseUrl/user/login";
+  
+  /// 注册（邮箱+密码）
+  static String register() => "$baseUrl/user/register";
+  
+  /// 密码登录
+  static String loginWithPassword() => "$baseUrl/user/login/password";
+  
+  /// 设置密码
+  static String setPassword() => "$baseUrl/user/password/set";
+  
+  /// 修改密码
+  static String updatePassword() => "$baseUrl/user/password/update";
+  
+  /// 检查是否设置密码
+  static String hasPassword() => "$baseUrl/user/hasPassword";
   
   /// 获取用户信息
   static String getUserProfile() => "$baseUrl/user/profile/me";
@@ -137,4 +155,9 @@ class ApiConfig {
   
   /// 获取资产变动记录
   static String getAssetRecords(String assetId) => "$baseUrl/asset/$assetId/records";
+
+  // ============ AI相关接口 ============
+
+  /// AI聊天
+  static String get aiChat => "$baseUrl/ai/chat";
 }

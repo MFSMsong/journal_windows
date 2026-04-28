@@ -8,24 +8,20 @@ import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/routers.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 
-/// 登录控制器
-/// 管理登录页面的状态和登录逻辑
-/// 支持邮箱验证码登录和密码登录两种方式
-class LoginController extends GetxController {
+/// 注册控制器
+/// 管理注册页面的状态和注册逻辑
+class RegisterController extends GetxController {
   /// 邮箱输入控制器
   final emailController = TextEditingController();
-  
-  /// 验证码输入控制器
-  final codeController = TextEditingController();
   
   /// 密码输入控制器
   final passwordController = TextEditingController();
   
-  /// 登录类型：code-验证码登录，password-密码登录
-  final loginType = 'code'.obs;
+  /// 确认密码输入控制器
+  final confirmPasswordController = TextEditingController();
   
-  /// 是否同意协议
-  final isAgree = false.obs;
+  /// 验证码输入控制器
+  final codeController = TextEditingController();
   
   /// 是否正在加载
   final isLoading = false.obs;
@@ -39,13 +35,20 @@ class LoginController extends GetxController {
   /// 是否显示密码
   final showPassword = false.obs;
   
+  /// 是否显示确认密码
+  final showConfirmPassword = false.obs;
+  
+  /// 是否同意协议
+  final isAgree = false.obs;
+  
   Timer? _timer;
 
   @override
   void onClose() {
     emailController.dispose();
-    codeController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
+    codeController.dispose();
     _timer?.cancel();
     super.onClose();
   }
@@ -60,7 +63,7 @@ class LoginController extends GetxController {
     
     try {
       await HttpRequest.post(
-        ApiConfig.sendEmailCode(),
+        ApiConfig.sendRegisterEmailCode(),
         queryParameters: {'email': email},
         success: (_) {
           ToastUtil.showSuccess('验证码已发送');
@@ -117,30 +120,34 @@ class LoginController extends GetxController {
     });
   }
 
-  /// 登录
-  Future<void> login() async {
+  /// 注册
+  Future<void> register() async {
     final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+    final code = codeController.text.trim();
     
     if (!_validateEmail(email)) return;
-
-    if (!isAgree.value) {
-      ToastUtil.showInfo('请先同意用户协议');
+    
+    if (!_validatePassword(password)) return;
+    
+    if (confirmPassword.isEmpty) {
+      ToastUtil.showInfo('请确认密码');
       return;
     }
     
-    if (loginType.value == 'code') {
-      await _loginWithCode(email);
-    } else {
-      await _loginWithPassword(email);
+    if (password != confirmPassword) {
+      ToastUtil.showInfo('两次输入的密码不一致');
+      return;
     }
-  }
-
-  /// 验证码登录
-  Future<void> _loginWithCode(String email) async {
-    final code = codeController.text.trim();
     
     if (code.isEmpty) {
       ToastUtil.showInfo('请输入验证码');
+      return;
+    }
+
+    if (!isAgree.value) {
+      ToastUtil.showInfo('请先同意用户协议');
       return;
     }
     
@@ -148,9 +155,10 @@ class LoginController extends GetxController {
     
     try {
       await HttpRequest.post(
-        ApiConfig.login(),
+        ApiConfig.register(),
         queryParameters: {
-          'account': email,
+          'email': email,
+          'password': password,
           'code': code,
         },
         success: (data) async {
@@ -159,40 +167,7 @@ class LoginController extends GetxController {
 
           await UserService.to.getUserProfile();
 
-          ToastUtil.showSuccess('登录成功');
-          Get.offAllNamed(Routers.LayoutPageUrl);
-        },
-        fail: (code, msg) {
-          ToastUtil.showError(msg);
-        },
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// 密码登录
-  Future<void> _loginWithPassword(String email) async {
-    final password = passwordController.text.trim();
-    
-    if (!_validatePassword(password)) return;
-    
-    isLoading.value = true;
-    
-    try {
-      await HttpRequest.post(
-        ApiConfig.loginWithPassword(),
-        queryParameters: {
-          'email': email,
-          'password': password,
-        },
-        success: (data) async {
-          final token = data as String;
-          await StorageService.setToken(token);
-
-          await UserService.to.getUserProfile();
-
-          ToastUtil.showSuccess('登录成功');
+          ToastUtil.showSuccess('注册成功');
           Get.offAllNamed(Routers.LayoutPageUrl);
         },
         fail: (code, msg) {

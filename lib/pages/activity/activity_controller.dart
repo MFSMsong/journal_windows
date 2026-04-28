@@ -17,8 +17,6 @@ class ActivityController extends GetxController {
   final budgetController = TextEditingController();
   final descriptionController = TextEditingController();
 
-  final budgetType = 'monthly'.obs;
-
   @override
   void onInit() {
     super.onInit();
@@ -39,13 +37,7 @@ class ActivityController extends GetxController {
       nameController.text = activity!.activityName;
       budgetController.text = activity!.budget?.toString() ?? '';
       descriptionController.text = activity!.description ?? '';
-      budgetType.value = activity!.budgetType ?? 'monthly';
     }
-  }
-
-  /// 设置预算类型
-  void setBudgetType(String type) {
-    budgetType.value = type;
   }
 
   /// 创建账本
@@ -66,7 +58,6 @@ class ActivityController extends GetxController {
       userId: '',
       creatorName: '',
       budget: budget,
-      budgetType: budget != null ? budgetType.value : null,
       description: descriptionController.text.trim(),
       activated: true,
       createTime: '',
@@ -103,7 +94,6 @@ class ActivityController extends GetxController {
     final updatedActivity = activity!.copyWith(
       activityName: name,
       budget: budget,
-      budgetType: budget != null ? budgetType.value : null,
       description: descriptionController.text.trim(),
     );
 

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:journal_windows/pages/login/login_page.dart';
+import 'package:journal_windows/pages/login/register_page.dart';
 import 'package:journal_windows/pages/main_layout.dart';
 import 'package:journal_windows/pages/expense/expense_list_page.dart';
 import 'package:journal_windows/pages/activity/activity_list_page.dart';
@@ -12,6 +13,9 @@ import 'package:journal_windows/pages/profile/edit_profile_page.dart';
 abstract class Routers {
   /// 登录页
   static const String LoginPageUrl = '/login';
+  
+  /// 注册页
+  static const String RegisterPageUrl = '/register';
   
   /// 主布局页
   static const String LayoutPageUrl = '/layout';
@@ -39,6 +43,10 @@ abstract class Routers {
     GetPage(
       name: LoginPageUrl,
       page: () => const LoginPage(),
+    ),
+    GetPage(
+      name: RegisterPageUrl,
+      page: () => const RegisterPage(),
     ),
     GetPage(
       name: LayoutPageUrl,

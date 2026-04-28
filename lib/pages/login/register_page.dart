@@ -1,47 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:journal_windows/pages/login/login_controller.dart';
+import 'package:journal_windows/pages/login/register_controller.dart';
 
-/// 登录页面
-/// 支持邮箱验证码登录和密码登录两种方式
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+/// 注册页面
+/// 用户通过邮箱和密码注册账号
+class RegisterPage extends StatelessWidget {
+  const RegisterPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(LoginController());
+    final controller = Get.put(RegisterController());
 
     return Scaffold(
       body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
+        child: Container(
+          width: 420,
+          padding: const EdgeInsets.all(40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(),
-                const SizedBox(height: 40),
-                _buildTabBar(controller),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 _buildForm(controller),
                 const SizedBox(height: 16),
                 _buildAgreement(controller),
                 const SizedBox(height: 24),
-                _buildLoginButton(controller),
+                _buildRegisterButton(controller),
                 const SizedBox(height: 16),
-                _buildRegisterLink(controller),
+                _buildLoginLink(),
               ],
             ),
           ),
@@ -69,15 +67,15 @@ class LoginPage extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         const Text(
-          '好享记账',
+          '注册账号',
           style: TextStyle(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Windows 桌面版',
+          '创建您的好享记账账号',
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],
@@ -87,92 +85,87 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  /// 构建Tab切换
-  Widget _buildTabBar(LoginController controller) {
-    return Obx(() => Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildTabItem(
-              '验证码登录',
-              controller.loginType.value == 'code',
-              () => controller.loginType.value = 'code',
-            ),
-          ),
-          Expanded(
-            child: _buildTabItem(
-              '密码登录',
-              controller.loginType.value == 'password',
-              () => controller.loginType.value = 'password',
-            ),
-          ),
-        ],
-      ),
-    ));
-  }
-
-  /// 构建Tab项
-  Widget _buildTabItem(String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? Theme.of(Get.context!).primaryColor : Colors.grey[600],
-          ),
-        ),
-      ),
-    );
-  }
-
   /// 构建表单
-  Widget _buildForm(LoginController controller) {
+  Widget _buildForm(RegisterController controller) {
     return Column(
       children: [
-        TextField(
-          controller: controller.emailController,
-          decoration: InputDecoration(
-            labelText: '邮箱',
-            hintText: '请输入邮箱地址',
-            prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          keyboardType: TextInputType.emailAddress,
-        ),
+        _buildEmailInput(controller),
         const SizedBox(height: 16),
-        Obx(() => controller.loginType.value == 'code'
-            ? _buildCodeInput(controller)
-            : _buildPasswordInput(controller)),
+        _buildPasswordInput(controller),
+        const SizedBox(height: 16),
+        _buildConfirmPasswordInput(controller),
+        const SizedBox(height: 16),
+        _buildCodeInput(controller),
       ],
     );
   }
 
+  /// 构建邮箱输入
+  Widget _buildEmailInput(RegisterController controller) {
+    return TextField(
+      controller: controller.emailController,
+      decoration: InputDecoration(
+        labelText: '邮箱',
+        hintText: '请输入邮箱地址',
+        prefixIcon: const Icon(Icons.email_outlined),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      keyboardType: TextInputType.emailAddress,
+    );
+  }
+
+  /// 构建密码输入
+  Widget _buildPasswordInput(RegisterController controller) {
+    return Obx(() => TextField(
+      controller: controller.passwordController,
+      obscureText: !controller.showPassword.value,
+      decoration: InputDecoration(
+        labelText: '密码',
+        hintText: '6-20位字母数字组合',
+        prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(
+            controller.showPassword.value 
+                ? Icons.visibility_off 
+                : Icons.visibility,
+          ),
+          onPressed: () => controller.showPassword.value = !controller.showPassword.value,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    ));
+  }
+
+  /// 构建确认密码输入
+  Widget _buildConfirmPasswordInput(RegisterController controller) {
+    return Obx(() => TextField(
+      controller: controller.confirmPasswordController,
+      obscureText: !controller.showConfirmPassword.value,
+      decoration: InputDecoration(
+        labelText: '确认密码',
+        hintText: '请再次输入密码',
+        prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(
+            controller.showConfirmPassword.value 
+                ? Icons.visibility_off 
+                : Icons.visibility,
+          ),
+          onPressed: () => controller.showConfirmPassword.value = !controller.showConfirmPassword.value,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    ));
+  }
+
   /// 构建验证码输入
-  Widget _buildCodeInput(LoginController controller) {
+  Widget _buildCodeInput(RegisterController controller) {
     return Row(
       children: [
         Expanded(
@@ -181,7 +174,7 @@ class LoginPage extends StatelessWidget {
             decoration: InputDecoration(
               labelText: '验证码',
               hintText: '请输入验证码',
-              prefixIcon: const Icon(Icons.lock_outline),
+              prefixIcon: const Icon(Icons.verified_user_outlined),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -214,32 +207,8 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  /// 构建密码输入
-  Widget _buildPasswordInput(LoginController controller) {
-    return Obx(() => TextField(
-      controller: controller.passwordController,
-      obscureText: !controller.showPassword.value,
-      decoration: InputDecoration(
-        labelText: '密码',
-        hintText: '请输入密码',
-        prefixIcon: const Icon(Icons.lock_outline),
-        suffixIcon: IconButton(
-          icon: Icon(
-            controller.showPassword.value 
-                ? Icons.visibility_off 
-                : Icons.visibility,
-          ),
-          onPressed: () => controller.showPassword.value = !controller.showPassword.value,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    ));
-  }
-
   /// 构建协议勾选
-  Widget _buildAgreement(LoginController controller) {
+  Widget _buildAgreement(RegisterController controller) {
     return Obx(() => Row(
       children: [
         SizedBox(
@@ -290,13 +259,13 @@ class LoginPage extends StatelessWidget {
     ));
   }
 
-  /// 构建登录按钮
-  Widget _buildLoginButton(LoginController controller) {
+  /// 构建注册按钮
+  Widget _buildRegisterButton(RegisterController controller) {
     return Obx(() => SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: controller.isLoading.value ? null : controller.login,
+        onPressed: controller.isLoading.value ? null : controller.register,
         style: ElevatedButton.styleFrom(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -312,26 +281,26 @@ class LoginPage extends StatelessWidget {
                 ),
               )
             : const Text(
-                '登 录',
+                '注 册',
                 style: TextStyle(fontSize: 16),
               ),
       ),
     ));
   }
 
-  /// 构建注册链接
-  Widget _buildRegisterLink(LoginController controller) {
+  /// 构建登录链接
+  Widget _buildLoginLink() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          '还没有账号？',
+          '已有账号？',
           style: TextStyle(fontSize: 13, color: Colors.grey[600]),
         ),
         GestureDetector(
-          onTap: () => Get.toNamed('/register'),
+          onTap: () => Get.back(),
           child: Text(
-            '立即注册',
+            '立即登录',
             style: TextStyle(
               fontSize: 13,
               color: Theme.of(Get.context!).primaryColor,

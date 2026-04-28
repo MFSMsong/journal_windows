@@ -70,8 +70,6 @@ class _ActivityPageState extends State<ActivityPage> {
           const SizedBox(height: 24),
           _buildBudgetInput(controller!, canEdit),
           const SizedBox(height: 24),
-          _buildBudgetTypeSelector(controller!, canEdit),
-          const SizedBox(height: 24),
           _buildDescriptionInput(controller!, canEdit),
           if (activity != null) ...[
             const SizedBox(height: 24),
@@ -119,8 +117,6 @@ class _ActivityPageState extends State<ActivityPage> {
                       _buildNameInput(controller!, canEdit, isDialog: true),
                       const SizedBox(height: 24),
                       _buildBudgetInput(controller!, canEdit, isDialog: true),
-                      const SizedBox(height: 24),
-                      _buildBudgetTypeSelector(controller!, canEdit, isDialog: true),
                       const SizedBox(height: 24),
                       _buildDescriptionInput(controller!, canEdit, isDialog: true),
                       if (activity != null) ...[
@@ -296,49 +292,6 @@ class _ActivityPageState extends State<ActivityPage> {
       ],
     );
   }
-
-  /// 构建预算类型选择器
-  Widget _buildBudgetTypeSelector(ActivityController controller, bool canEdit, {bool isDialog = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '预算周期',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isDialog ? Colors.white : Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Obx(() => Wrap(
-          spacing: 12,
-          children: [
-            _buildTypeChip('月预算', 'monthly', controller, canEdit, isDialog),
-            _buildTypeChip('周预算', 'weekly', controller, canEdit, isDialog),
-            _buildTypeChip('日预算', 'daily', controller, canEdit, isDialog),
-          ],
-        )),
-      ],
-    );
-  }
-
-  Widget _buildTypeChip(String label, String value, ActivityController controller, bool canEdit, bool isDialog) {
-    final isSelected = controller.budgetType.value == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: canEdit ? (_) => controller.setBudgetType(value) : null,
-      selectedColor: isDialog ? Colors.white : Theme.of(Get.context!).primaryColor,
-      backgroundColor: isDialog ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200],
-      labelStyle: TextStyle(
-        color: isSelected
-            ? (isDialog ? const Color(0xFF2D3E50) : Colors.white)
-            : (isDialog ? Colors.white70 : Colors.grey[700]),
-      ),
-    );
-  }
-
   /// 构建描述输入
   Widget _buildDescriptionInput(ActivityController controller, bool canEdit, {bool isDialog = false}) {
     return Column(

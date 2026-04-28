@@ -6,6 +6,7 @@ class User {
   String? openid;
   bool vip;
   String? telephone;
+  String? email;
   String? currentActivityId;
   String? openingStatement;
   String? salutation;
@@ -21,6 +22,7 @@ class User {
     this.openid,
     required this.vip,
     this.telephone,
+    this.email,
     this.currentActivityId,
     this.openingStatement,
     this.salutation,
@@ -38,6 +40,7 @@ class User {
       openid: json['openid'],
       vip: json['vip'] ?? false,
       telephone: json['telephone'],
+      email: json['email'],
       currentActivityId: json['currentActivityId'],
       openingStatement: json['openingStatement'],
       salutation: json['salutation'],
@@ -56,6 +59,7 @@ class User {
       'openid': openid,
       'vip': vip,
       'telephone': telephone,
+      'email': email,
       'currentActivityId': currentActivityId,
       'openingStatement': openingStatement,
       'salutation': salutation,
@@ -74,6 +78,7 @@ class User {
     String? openid,
     bool? vip,
     String? telephone,
+    String? email,
     String? currentActivityId,
     String? openingStatement,
     String? salutation,
@@ -89,6 +94,7 @@ class User {
       openid: openid ?? this.openid,
       vip: vip ?? this.vip,
       telephone: telephone ?? this.telephone,
+      email: email ?? this.email,
       currentActivityId: currentActivityId ?? this.currentActivityId,
       openingStatement: openingStatement ?? this.openingStatement,
       salutation: salutation ?? this.salutation,
@@ -106,6 +112,7 @@ class User {
       nickname: '',
       avatarUrl: '',
       vip: false,
+      email: '',
       createTime: '',
     );
   }

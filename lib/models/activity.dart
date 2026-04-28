@@ -9,7 +9,6 @@ class Activity {
   String creatorName;
   String? description;
   double? budget;
-  String? budgetType;
   double? remainingBudget;
   double? todayExpense;
   double? weekExpense;
@@ -29,7 +28,6 @@ class Activity {
     required this.creatorName,
     this.description,
     this.budget,
-    this.budgetType,
     this.remainingBudget,
     this.todayExpense,
     this.weekExpense,
@@ -51,7 +49,6 @@ class Activity {
       creatorName: json['creatorName'] ?? '',
       description: json['description'],
       budget: json['budget']?.toDouble(),
-      budgetType: json['budgetType'],
       remainingBudget: json['remainingBudget']?.toDouble(),
       todayExpense: json['todayExpense']?.toDouble(),
       weekExpense: json['weekExpense']?.toDouble(),
@@ -78,7 +75,6 @@ class Activity {
       'creatorName': creatorName,
       'description': description,
       'budget': budget,
-      'budgetType': budgetType,
       'remainingBudget': remainingBudget,
       'todayExpense': todayExpense,
       'weekExpense': weekExpense,
@@ -128,7 +124,6 @@ class Activity {
     String? creatorName,
     String? description,
     double? budget,
-    String? budgetType,
     double? remainingBudget,
     double? todayExpense,
     double? weekExpense,
@@ -148,7 +143,6 @@ class Activity {
       creatorName: creatorName ?? this.creatorName,
       description: description ?? this.description,
       budget: budget ?? this.budget,
-      budgetType: budgetType ?? this.budgetType,
       remainingBudget: remainingBudget ?? this.remainingBudget,
       todayExpense: todayExpense ?? this.todayExpense,
       weekExpense: weekExpense ?? this.weekExpense,

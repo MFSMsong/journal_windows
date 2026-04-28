@@ -5,6 +5,7 @@ import 'package:journal_windows/pages/activity/activity_list_page.dart';
 import 'package:journal_windows/pages/charts/charts_page.dart';
 import 'package:journal_windows/pages/profile/profile_page.dart';
 import 'package:journal_windows/pages/asset/asset_list_page.dart';
+import 'package:journal_windows/pages/ai/ai_chat_page.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/services/asset_service.dart';
@@ -16,6 +17,9 @@ class MainLayoutController extends GetxController {
   final UserService userService = UserService.to;
   final ActivityService activityService = ActivityService.to;
   final AssetService assetService = AssetService.to;
+  
+  final isAiPanelOpen = false.obs;
+  final aiPanelWidth = 380.0;
 
   /// 当前页面
   Widget get currentPage {
@@ -47,7 +51,6 @@ class MainLayoutController extends GetxController {
   Future<void> _initData() async {
     await userService.getUserProfile();
     await activityService.getCurrentActivity();
-    // 加载我的账本和加入的账本
     await activityService.getMyActivities();
     await activityService.getJoinedActivities();
   }
@@ -56,31 +59,40 @@ class MainLayoutController extends GetxController {
   Future<void> changePage(int index) async {
     currentIndex.value = index;
 
-    // 根据页面索引刷新数据
     switch (index) {
       case 0:
-        // 账单页面：刷新当前账本和所有账本列表（我的+加入的）
         await activityService.getCurrentActivity();
         await activityService.getMyActivities();
         await activityService.getJoinedActivities();
         break;
       case 1:
-        // 账本管理页面：刷新账本列表
         await activityService.getMyActivities();
         await activityService.getJoinedActivities();
         break;
       case 2:
-        // 统计页面：暂不需要
         break;
       case 3:
-        // 资产管理页面：刷新资产数据
         await assetService.refresh();
         break;
       case 4:
-        // 个人信息页面：刷新用户信息
         await userService.getUserProfile();
         break;
     }
+  }
+
+  /// 切换AI面板
+  void toggleAiPanel() {
+    isAiPanelOpen.value = !isAiPanelOpen.value;
+  }
+
+  /// 打开AI面板
+  void openAiPanel() {
+    isAiPanelOpen.value = true;
+  }
+
+  /// 关闭AI面板
+  void closeAiPanel() {
+    isAiPanelOpen.value = false;
   }
 
   /// 登出

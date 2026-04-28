@@ -96,14 +96,13 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
             onPressed: () => controller.loadActivities(),
           ),
           const SizedBox(width: 4),
-          // 导出按钮
           IconButton(
             icon: const Icon(Icons.download_outlined, size: 20),
             tooltip: '导出Excel',
             onPressed: _exportToExcel,
           ),
           const SizedBox(width: 12),
-          _buildGlobalSearchInput(),
+          Flexible(child: _buildGlobalSearchInput()),
           const Spacer(),
           _buildJoinActivityButton(),
           const SizedBox(width: 12),

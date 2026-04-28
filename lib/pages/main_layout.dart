@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/pages/main_layout_controller.dart';
+import 'package:journal_windows/pages/ai/ai_chat_page.dart';
 
 /// 主布局页面 - Windows桌面风格
 class MainLayout extends StatelessWidget {
@@ -13,42 +14,36 @@ class MainLayout extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          // 左侧导航栏
           _buildNavigationRail(context, controller),
-          // 垂直分割线
           const VerticalDivider(thickness: 1, width: 1),
-          // 右侧内容区域
           Expanded(
             child: Obx(() => _buildContent(controller)),
           ),
+          Obx(() => _buildAiPanel(context, controller)),
         ],
       ),
     );
   }
 
-  /// 构建导航栏
   Widget _buildNavigationRail(BuildContext context, MainLayoutController controller) {
     return Container(
       width: 200,
       color: Colors.white,
       child: Column(
         children: [
-          // 应用标题
           _buildAppHeader(context),
           const Divider(),
-          // 导航菜单
           Expanded(
             child: Obx(() => _buildNavMenu(context, controller)),
           ),
           const Divider(),
-          // 用户信息
+          _buildAiButton(context, controller),
           _buildUserSection(context, controller),
         ],
       ),
     );
   }
 
-  /// 构建应用头部
   Widget _buildAppHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -92,7 +87,6 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  /// 构建导航菜单
   Widget _buildNavMenu(BuildContext context, MainLayoutController controller) {
     final menuItems = [
       _NavItem(icon: Icons.receipt_long, label: '账单记录', index: 0),
@@ -102,7 +96,6 @@ class MainLayout extends StatelessWidget {
       _NavItem(icon: Icons.person, label: '个人信息', index: 4),
     ];
 
-    // 确保访问 .value 触发依赖追踪
     final currentIndex = controller.currentIndex.value;
 
     return ListView.builder(
@@ -149,10 +142,46 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  /// 构建用户区域
+  Widget _buildAiButton(BuildContext context, MainLayoutController controller) {
+    return Obx(() {
+      final isOpen = controller.isAiPanelOpen.value;
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isOpen 
+              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ListTile(
+          leading: Icon(
+            Icons.smart_toy,
+            color: isOpen 
+                ? Theme.of(context).primaryColor 
+                : Colors.grey[600],
+            size: 22,
+          ),
+          title: Text(
+            'AI助手',
+            style: TextStyle(
+              color: isOpen 
+                  ? Theme.of(context).primaryColor 
+                  : Colors.grey[700],
+              fontWeight: isOpen ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          onTap: controller.toggleAiPanel,
+        ),
+      );
+    });
+  }
+
   Widget _buildUserSection(BuildContext context, MainLayoutController controller) {
     return Obx(() {
-      // 确保访问 .value 触发依赖追踪
       final user = controller.userService.currentUser;
       final hasUser = user.value != null;
       
@@ -224,15 +253,29 @@ class MainLayout extends StatelessWidget {
     });
   }
 
-  /// 构建内容区域
   Widget _buildContent(MainLayoutController controller) {
-    // 确保访问 .value 触发依赖追踪
     final currentIndex = controller.currentIndex.value;
     return controller.currentPage;
   }
+
+  Widget _buildAiPanel(BuildContext context, MainLayoutController controller) {
+    if (!controller.isAiPanelOpen.value) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const VerticalDivider(thickness: 1, width: 1),
+        SizedBox(
+          width: controller.aiPanelWidth,
+          child: const AiChatPage(),
+        ),
+      ],
+    );
+  }
 }
 
-/// 导航项
 class _NavItem {
   final IconData icon;
   final String label;

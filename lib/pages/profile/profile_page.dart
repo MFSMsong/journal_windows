@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/pages/profile/profile_controller.dart';
 import 'package:journal_windows/pages/profile/edit_profile_page.dart';
+import 'package:journal_windows/pages/profile/password_dialog.dart';
+import 'package:journal_windows/config/api_config.dart';
+import 'package:journal_windows/request/request.dart';
+import 'package:journal_windows/utils/toast_util.dart';
 
 /// 个人信息页面
 class ProfilePage extends StatelessWidget {
@@ -27,7 +31,6 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // 刷新按钮
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 20),
                   tooltip: '刷新',
@@ -202,6 +205,8 @@ class ProfilePage extends StatelessWidget {
             () => _showEditProfileDialog(),
           ),
           const Divider(height: 1),
+          _buildPasswordSettingItem(),
+          const Divider(height: 1),
           _buildSettingItem(
             Icons.notifications_outlined,
             '通知设置',
@@ -231,6 +236,40 @@ class ProfilePage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建密码设置项
+  Widget _buildPasswordSettingItem() {
+    return FutureBuilder<bool>(
+      future: _checkHasPassword(),
+      builder: (context, snapshot) {
+        final hasPassword = snapshot.data ?? false;
+        return _buildSettingItem(
+          Icons.lock_outline,
+          hasPassword ? '修改密码' : '设置密码',
+          hasPassword ? '修改登录密码' : '设置密码后可使用密码登录',
+          () => _showPasswordDialog(hasPassword),
+        );
+      },
+    );
+  }
+
+  /// 检查是否已设置密码
+  Future<bool> _checkHasPassword() async {
+    try {
+      final response = await HttpRequest.get(ApiConfig.hasPassword());
+      return response as bool;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// 显示密码对话框
+  void _showPasswordDialog(bool hasPassword) {
+    Get.dialog(
+      PasswordDialog(hasPassword: hasPassword),
+      barrierDismissible: true,
     );
   }
 
