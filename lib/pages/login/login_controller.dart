@@ -5,6 +5,7 @@ import 'package:journal_windows/config/api_config.dart';
 import 'package:journal_windows/request/request.dart';
 import 'package:journal_windows/services/storage_service.dart';
 import 'package:journal_windows/services/user_service.dart';
+import 'package:journal_windows/services/websocket_service.dart';
 import 'package:journal_windows/routers.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 
@@ -143,6 +144,8 @@ class LoginController extends GetxController {
           await StorageService.setToken(token);
 
           await UserService.to.getUserProfile();
+          
+          WebSocketService.to.connect();
 
           ToastUtil.showSuccess('登录成功');
           Get.offAllNamed(Routers.LayoutPageUrl);

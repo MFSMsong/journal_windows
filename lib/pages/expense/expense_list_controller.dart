@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:collection/collection.dart';
 import 'package:journal_windows/models/expense.dart';
@@ -5,12 +6,15 @@ import 'package:journal_windows/models/activity.dart';
 import 'package:journal_windows/services/expense_service.dart';
 import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/services/storage_service.dart';
+import 'package:journal_windows/services/websocket_service.dart';
+import 'package:journal_windows/constants/message_type.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 
 /// 账单列表控制器
 class ExpenseListController extends GetxController {
   final ExpenseService _expenseService = ExpenseService.to;
   final ActivityService _activityService = ActivityService.to;
+  final WebSocketService _webSocketService = WebSocketService.to;
   
   final RxList<Expense> expenses = <Expense>[].obs;
   final RxList<Activity> activities = <Activity>[].obs;
@@ -21,6 +25,8 @@ class ExpenseListController extends GetxController {
   
   int _currentPage = 1;
   final int _pageSize = 20;
+  
+  StreamSubscription? _wsSubscription;
 
   @override
   void onInit() {
@@ -63,6 +69,127 @@ class ExpenseListController extends GetxController {
     if (currentActivity.value != null) {
       await loadExpenses(refresh: true);
     }
+    
+    _subscribeWebSocket();
+  }
+
+  void _subscribeWebSocket() {
+    _wsSubscription = _webSocketService.messageStream.listen(_handleWebSocketMessage);
+    
+    ever(currentActivity, (Activity? activity) {
+      if (activity != null) {
+        _webSocketService.subscribeActivity(activity.activityId);
+      }
+    });
+    
+    if (currentActivity.value != null) {
+      _webSocketService.subscribeActivity(currentActivity.value!.activityId);
+    }
+  }
+
+  void _handleWebSocketMessage(WebSocketMessage message) {
+    final activityId = message.activityId;
+    final currentId = currentActivity.value?.activityId;
+    
+    if (activityId != null && activityId != currentId) {
+      return;
+    }
+    
+    switch (message.type) {
+      case MessageType.expenseAdd:
+        _onExpenseAdd(message.data);
+        break;
+      case MessageType.expenseUpdate:
+        _onExpenseUpdate(message.data);
+        break;
+      case MessageType.expenseDelete:
+        _onExpenseDelete(message.data);
+        break;
+      case MessageType.activityUpdate:
+        _onActivityUpdate(message.data);
+        break;
+      case MessageType.activityDelete:
+        _onActivityDelete(message.data);
+        break;
+      case MessageType.memberJoin:
+      case MessageType.memberExit:
+      case MessageType.memberKick:
+      case MessageType.memberNicknameUpdate:
+        _onMemberChange(message);
+        break;
+    }
+  }
+
+  void _onExpenseAdd(dynamic data) {
+    if (data == null) return;
+    
+    try {
+      final expense = Expense.fromJson(data as Map<String, dynamic>);
+      expenses.insert(0, expense);
+      setHighlightExpenseId(expense.expenseId);
+      Future.delayed(const Duration(seconds: 2), clearHighlight);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _onExpenseUpdate(dynamic data) {
+    if (data == null) return;
+    
+    try {
+      final expense = Expense.fromJson(data as Map<String, dynamic>);
+      final index = expenses.indexWhere((e) => e.expenseId == expense.expenseId);
+      if (index != -1) {
+        expenses[index] = expense;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _onExpenseDelete(dynamic data) {
+    if (data == null) return;
+    
+    try {
+      final expenseId = (data as Map<String, dynamic>)['expenseId'] as String;
+      expenses.removeWhere((e) => e.expenseId == expenseId);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _onActivityUpdate(dynamic data) {
+    if (data == null) return;
+    
+    try {
+      final activity = Activity.fromJson(data as Map<String, dynamic>);
+      if (currentActivity.value?.activityId == activity.activityId) {
+        currentActivity.value = activity;
+      }
+      loadActivities();
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _onActivityDelete(dynamic data) {
+    if (data == null) return;
+    
+    try {
+      final activityId = (data as Map<String, dynamic>)['activityId'] as String;
+      if (currentActivity.value?.activityId == activityId) {
+        currentActivity.value = null;
+        expenses.clear();
+        _webSocketService.unsubscribeActivity(activityId);
+      }
+      loadActivities();
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _onMemberChange(WebSocketMessage message) {
+    loadActivities();
   }
 
   /// 合并我的账本和加入的账本
@@ -139,6 +266,12 @@ class ExpenseListController extends GetxController {
     isLoading.value = false;
     hasMore.value = true;
     _currentPage = 1;
+  }
+
+  @override
+  void onClose() {
+    _wsSubscription?.cancel();
+    super.onClose();
   }
 
   /// 加载账本列表 - 用于刷新

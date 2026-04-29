@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:journal_windows/core/log.dart';
 import 'package:journal_windows/routers.dart';
 import 'package:journal_windows/services/storage_service.dart';
+import 'package:journal_windows/services/websocket_service.dart';
 
 /// 环境类型
 enum Env { qa, beta, prod }
@@ -16,6 +17,11 @@ Env appEnv = Env.prod;
 Future<void> initApp(Env env) async {
   appEnv = env;
   await StorageService.init();
+  
+  if (StorageService.isLoggedIn()) {
+    WebSocketService.to.connect();
+  }
+  
   Log().d('应用初始化完成');
 }
 
