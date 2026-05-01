@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -51,6 +52,8 @@ class AddExpensePage extends StatelessWidget {
                   _buildDatePicker(controller),
                   const SizedBox(height: 24),
                   _buildOriginalPriceInput(controller),
+                  const SizedBox(height: 24),
+                  _buildImagePicker(controller),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -416,10 +419,10 @@ class AddExpensePage extends StatelessWidget {
 
   /// 构建保存按钮
   Widget _buildSaveButton(AddExpenseController controller) {
-    return SizedBox(
+    return Obx(() => SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () => _save(controller),
+        onPressed: controller.isUploadingImages.value ? null : () => _save(controller),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF2D3E50),
@@ -428,12 +431,142 @@ class AddExpensePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          '保存',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+        child: controller.isUploadingImages.value
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 8),
+                  Text('上传图片中...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                ],
+              )
+            : const Text(
+                '保存',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+      ),
+    ));
+  }
+
+  /// 构建图片选择器
+  Widget _buildImagePicker(AddExpenseController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              '附件图片',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '最多3张（可选）',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Obx(() => Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            ...controller.selectedImagePaths.asMap().entries.map((entry) {
+              final index = entry.key;
+              final imagePath = entry.value;
+              return _buildImageItem(imagePath, index, controller);
+            }),
+            if (controller.selectedImagePaths.length < 3)
+              _buildAddImageButton(controller),
+          ],
+        )),
+      ],
+    );
+  }
+
+  Widget _buildImageItem(String imagePath, int index, AddExpenseController controller) {
+    return Stack(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            image: DecorationImage(
+              image: FileImage(File(imagePath)),
+              fit: BoxFit.cover,
+            ),
           ),
+        ),
+        Positioned(
+          right: -4,
+          top: -4,
+          child: GestureDetector(
+            onTap: () => controller.removeImage(index),
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                size: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddImageButton(AddExpenseController controller) {
+    return GestureDetector(
+      onTap: () => controller.pickImage(),
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_photo_alternate_outlined,
+              color: Colors.white.withValues(alpha: 0.6),
+              size: 28,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '添加图片',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );

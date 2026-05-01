@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/pages/main_layout_controller.dart';
 import 'package:journal_windows/pages/ai/ai_chat_page.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 
 /// 主布局页面 - Windows桌面风格
 class MainLayout extends StatelessWidget {
@@ -194,14 +195,22 @@ class MainLayout extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundImage: hasUser && user.value!.avatarUrl.isNotEmpty
-                      ? NetworkImage(user.value!.avatarUrl)
-                      : null,
-                  child: !hasUser || user.value!.avatarUrl.isEmpty
-                      ? const Icon(Icons.person, size: 20)
-                      : null,
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: ClipOval(
+                    child: hasUser && user.value!.avatarUrl.isNotEmpty
+                        ? CosImage(
+                            cosPath: user.value!.avatarUrl,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            color: Colors.grey.withValues(alpha: 0.3),
+                            child: const Icon(Icons.person, size: 20),
+                          ),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(

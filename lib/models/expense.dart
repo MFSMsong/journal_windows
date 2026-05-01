@@ -51,7 +51,9 @@ class Expense {
       createTime: json['createTime'] ?? '',
       updateTime: json['updateTime'],
       fileList: json['fileList'] != null 
-          ? List<String>.from(json['fileList']) 
+          ? (json['fileList'] is String 
+              ? (json['fileList'] as String).split(',').where((s) => s.isNotEmpty).toList()
+              : List<String>.from(json['fileList']))
           : null,
     );
   }
@@ -72,7 +74,7 @@ class Expense {
       'expenseTime': expenseTime,
       'createTime': createTime,
       'updateTime': updateTime,
-      'fileList': fileList,
+      'fileList': fileList != null && fileList!.isNotEmpty ? fileList!.join(',') : null,
     };
   }
 

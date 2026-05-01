@@ -6,6 +6,7 @@ import 'package:journal_windows/pages/activity/activity_controller.dart';
 import 'package:journal_windows/services/activity_service.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 
 /// 创建/编辑账本页面 - 支持弹窗和全屏两种模式
 class ActivityPage extends StatefulWidget {
@@ -527,33 +528,37 @@ class _ActivityPageState extends State<ActivityPage> {
 
   Widget _buildAvatar(ActivityMember member) {
     final hasAvatar = member.avatarUrl?.isNotEmpty == true;
+    if (hasAvatar) {
+      return SizedBox(
+        width: 36,
+        height: 36,
+        child: ClipOval(
+          child: CosImage(
+            cosPath: member.avatarUrl!,
+            width: 36,
+            height: 36,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: hasAvatar
-            ? null
-            : Colors.primaries[member.userId.hashCode % Colors.primaries.length],
+        color: Colors.primaries[member.userId.hashCode % Colors.primaries.length],
         shape: BoxShape.circle,
-        image: hasAvatar
-            ? DecorationImage(
-                image: NetworkImage(member.avatarUrl!),
-                fit: BoxFit.cover,
-              )
-            : null,
       ),
-      child: !hasAvatar
-          ? Center(
-              child: Text(
-                member.nickname.isNotEmpty ? member.nickname.substring(0, 1) : '?',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
-          : null,
+      child: Center(
+        child: Text(
+          member.nickname.isNotEmpty ? member.nickname.substring(0, 1) : '?',
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/pages/profile/edit_profile_controller.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 
 /// 编辑个人信息对话框
 class EditProfileDialog extends StatefulWidget {
@@ -128,15 +129,22 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         children: [
           Stack(
             children: [
-              Obx(() => CircleAvatar(
-                radius: 50,
-                backgroundImage: controller.avatarUrl.value.isNotEmpty
-                    ? NetworkImage(controller.avatarUrl.value)
-                    : null,
-                backgroundColor: Colors.white24,
-                child: controller.avatarUrl.value.isEmpty
-                    ? const Icon(Icons.person, size: 50, color: Colors.white70)
-                    : null,
+              Obx(() => SizedBox(
+                width: 100,
+                height: 100,
+                child: ClipOval(
+                  child: controller.avatarUrl.value.isNotEmpty
+                      ? CosImage(
+                          cosPath: controller.avatarUrl.value,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          color: Colors.white24,
+                          child: const Icon(Icons.person, size: 50, color: Colors.white70),
+                        ),
+                ),
               )),
               Positioned(
                 right: 0,

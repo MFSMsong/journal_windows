@@ -13,6 +13,7 @@ import 'package:journal_windows/services/expense_service.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/services/excel_export_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 import 'package:journal_windows/config/api_config.dart';
 import 'package:journal_windows/request/request.dart';
 import 'package:flutter/services.dart';
@@ -1423,31 +1424,41 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
   /// 构建单个用户头像
   Widget _buildUserAvatar(User user, double scale) {
     final hasAvatar = user.avatarUrl.isNotEmpty;
+    if (hasAvatar) {
+      return Container(
+        width: 32 * scale,
+        height: 32 * scale,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF2D3E50), width: 2),
+        ),
+        child: ClipOval(
+          child: CosImage(
+            cosPath: user.avatarUrl,
+            width: 32 * scale,
+            height: 32 * scale,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
     return Container(
       width: 32 * scale,
       height: 32 * scale,
       decoration: BoxDecoration(
-        color: hasAvatar
-            ? null
-            : Colors.primaries[user.userId.hashCode % Colors.primaries.length],
+        color: Colors.primaries[user.userId.hashCode % Colors.primaries.length],
         shape: BoxShape.circle,
         border: Border.all(color: const Color(0xFF2D3E50), width: 2),
-        image: hasAvatar
-            ? DecorationImage(
-                image: NetworkImage(user.avatarUrl), fit: BoxFit.cover)
-            : null,
       ),
-      child: !hasAvatar
-          ? Center(
-              child: Text(
-                user.nickname.isNotEmpty ? user.nickname.substring(0, 1) : '?',
-                style: TextStyle(
-                    fontSize: 12 * scale,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-              ),
-            )
-          : null,
+      child: Center(
+        child: Text(
+          user.nickname.isNotEmpty ? user.nickname.substring(0, 1) : '?',
+          style: TextStyle(
+              fontSize: 12 * scale,
+              color: Colors.white,
+              fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 
@@ -1625,24 +1636,27 @@ class _ActivityCardDelegate extends SliverPersistentHeaderDelegate {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
-                            Container(
+                            SizedBox(
                               width: 36,
                               height: 36,
-                              decoration: BoxDecoration(
-                                color: hasAvatar ? null : Colors.amber,
-                                shape: BoxShape.circle,
-                                image: hasAvatar
-                                    ? DecorationImage(image: NetworkImage(user.avatarUrl), fit: BoxFit.cover)
-                                    : null,
-                              ),
-                              child: !hasAvatar
-                                  ? Center(
-                                      child: Text(
-                                        user.nickname.isNotEmpty ? user.nickname.substring(0, 1) : '?',
-                                        style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.bold),
+                              child: ClipOval(
+                                child: hasAvatar
+                                    ? CosImage(
+                                        cosPath: user.avatarUrl,
+                                        width: 36,
+                                        height: 36,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Container(
+                                        color: Colors.amber,
+                                        child: Center(
+                                          child: Text(
+                                            user.nickname.isNotEmpty ? user.nickname.substring(0, 1) : '?',
+                                            style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
                                       ),
-                                    )
-                                  : null,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(

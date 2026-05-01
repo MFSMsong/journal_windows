@@ -50,10 +50,16 @@ class ApiConfig {
   /// 删除用户账户
   static String deleteUser() => "$baseUrl/user/delete";
 
+  /// 退出登录
+  static String logout() => "$baseUrl/user/logout";
+
   // ============ 腾讯云相关接口 ============
 
-  /// 获取 COS 临时凭证
-  static String getCosCredential() => "$baseUrl/tencent/cos/credential";
+  /// 获取 COS 上传凭证
+  static String getCosUploadCredential() => "$baseUrl/tencent/cos/upload-credential";
+
+  /// 获取 COS 预签名URL（私有读）
+  static String getCosPresignedUrl() => "$baseUrl/tencent/cos/presigned-url";
 
   // ============ 账单相关接口 ============
   

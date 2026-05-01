@@ -12,4 +12,5 @@ class MessageType {
   static const String memberNicknameUpdate = 'MEMBER_NICKNAME_UPDATE';
   
   static const String userUpdate = 'USER_UPDATE';
+  static const String kickOut = 'KICK_OUT';
 }

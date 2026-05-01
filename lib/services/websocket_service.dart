@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:journal_windows/config/api_config.dart';
 import 'package:journal_windows/services/storage_service.dart';
+import 'package:journal_windows/routers.dart';
+import 'package:journal_windows/utils/toast_util.dart';
 
 class WebSocketMessage {
   final String type;
@@ -142,6 +145,9 @@ class WebSocketService extends GetxService {
         lastError.value = '认证失败';
         disconnect();
         return;
+      } else if (wsMessage.type == 'KICK_OUT') {
+        _handleKickOut();
+        return;
       }
       
       _messageController.add(wsMessage);
@@ -156,6 +162,13 @@ class WebSocketService extends GetxService {
     isAuthenticated.value = false;
     connectionStatus.value = 'error';
     _scheduleReconnect();
+  }
+
+  void _handleKickOut() {
+    disconnect();
+    StorageService.clearToken();
+    ToastUtil.showInfo('您的账号已在其他设备登录');
+    Get.offAllNamed(Routers.LoginPageUrl);
   }
 
   void _onDone() {

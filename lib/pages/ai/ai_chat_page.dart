@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/pages/ai/ai_chat_controller.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 
 /// AI聊天页面
 /// 提供用户与AI理财助手的聊天界面
@@ -246,14 +247,22 @@ class AiChatPage extends StatelessWidget {
           // 用户消息显示用户头像
           if (isUser) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: controller.userService.currentUser.value?.avatarUrl.isNotEmpty == true
-                  ? NetworkImage(controller.userService.currentUser.value!.avatarUrl)
-                  : null,
-              child: controller.userService.currentUser.value?.avatarUrl.isEmpty != false
-                  ? const Icon(Icons.person, size: 16)
-                  : null,
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: ClipOval(
+                child: controller.userService.currentUser.value?.avatarUrl.isNotEmpty == true
+                    ? CosImage(
+                        cosPath: controller.userService.currentUser.value!.avatarUrl,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        child: const Icon(Icons.person, size: 16),
+                      ),
+              ),
             ),
           ],
         ],

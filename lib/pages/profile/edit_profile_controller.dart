@@ -111,7 +111,6 @@ class EditProfileController extends GetxController {
       final url = await TencentService.to.uploadAvatar(imagePath, user.userId);
 
       if (url != null) {
-        // 更新头像 URL
         avatarUrl.value = url;
         ToastUtil.showSuccess('头像上传成功，点击保存以更新');
       } else {

@@ -139,6 +139,16 @@ class UserService extends GetxService {
 
   /// 登出
   Future<void> logout() async {
+    try {
+      await HttpRequest.post(
+        ApiConfig.logout(),
+        success: (_) {},
+        fail: (_, __) {},
+      );
+    } catch (e) {
+      // 忽略退出登录接口调用失败
+    }
+    
     currentUser.value = null;
     // 清理账本缓存，避免切换账号后显示错误的账本数据
     ActivityService.to.clearCache();

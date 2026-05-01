@@ -8,6 +8,7 @@ import 'package:journal_windows/pages/expense/expense_list_controller.dart';
 import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 import 'package:journal_windows/utils/ui_util.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 import 'package:intl/intl.dart';
 
 /// 账单详情/编辑页面
@@ -208,6 +209,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           const SizedBox(height: 16),
           _buildViewItem(Icons.local_offer, '折扣', '原价 ¥${expense.originalPrice?.toStringAsFixed(2)}，省 ¥${expense.savedAmount.toStringAsFixed(2)}'),
         ],
+        if (expense.fileList != null && expense.fileList!.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _buildBillImages(expense.fileList!),
+        ],
       ],
     );
   }
@@ -237,6 +242,68 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBillImages(List<String> fileList) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.image_outlined, size: 20, color: Colors.white.withValues(alpha: 0.5)),
+            const SizedBox(width: 12),
+            Text(
+              '附件图片',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: fileList.map((cosPath) => GestureDetector(
+            onTap: () => _showImagePreview(cosPath),
+            child: CosImage(
+              cosPath: cosPath,
+              width: 100,
+              height: 100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          )).toList(),
+        ),
+      ],
+    );
+  }
+
+  void _showImagePreview(String cosPath) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            Center(
+              child: CosImage(
+                cosPath: cosPath,
+                fit: BoxFit.contain,
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 0,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

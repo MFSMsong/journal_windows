@@ -6,6 +6,7 @@ import 'package:journal_windows/pages/profile/password_dialog.dart';
 import 'package:journal_windows/config/api_config.dart';
 import 'package:journal_windows/request/request.dart';
 import 'package:journal_windows/utils/toast_util.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 
 /// 个人信息页面
 class ProfilePage extends StatelessWidget {
@@ -71,14 +72,22 @@ class ProfilePage extends StatelessWidget {
               // 头像和昵称
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: user.avatarUrl.isNotEmpty
-                        ? NetworkImage(user.avatarUrl)
-                        : null,
-                    child: user.avatarUrl.isEmpty
-                        ? const Icon(Icons.person, size: 40)
-                        : null,
+                  SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: ClipOval(
+                      child: user.avatarUrl.isNotEmpty
+                          ? CosImage(
+                              cosPath: user.avatarUrl,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                              child: const Icon(Icons.person, size: 40),
+                            ),
+                    ),
                   ),
                   const SizedBox(width: 20),
                   Expanded(
