@@ -14,9 +14,14 @@ class ProfileController extends GetxController {
     await userService.getUserProfile();
   }
 
+  /// 发送删除账户验证码
+  Future<bool> sendDeleteAccountEmailCode() async {
+    return await userService.sendDeleteAccountEmailCode();
+  }
+
   /// 删除账户
-  Future<void> deleteAccount() async {
-    final success = await userService.deleteUser();
+  Future<void> deleteAccount(String code) async {
+    final success = await userService.deleteUser(code);
     if (success) {
       ToastUtil.showSuccess('账户已删除');
       Get.offAllNamed(Routers.LoginPageUrl);

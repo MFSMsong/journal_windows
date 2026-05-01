@@ -370,23 +370,151 @@ class ProfilePage extends StatelessWidget {
   /// 显示删除确认对话框
   void _showDeleteDialog(ProfileController controller) {
     Get.dialog(
-      AlertDialog(
-        title: const Text('确认删除账户'),
-        content: const Text('删除账户后，所有数据将被永久删除，无法恢复。确定要继续吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              controller.deleteAccount();
-            },
-            child: const Text('删除', style: TextStyle(color: Colors.red)),
+      DeleteAccountDialog(controller: controller),
+      barrierDismissible: true,
+    );
+  }
+}
+
+/// 删除账户对话框
+class DeleteAccountDialog extends StatefulWidget {
+  final ProfileController controller;
+
+  const DeleteAccountDialog({super.key, required this.controller});
+
+  @override
+  State<DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
+  final TextEditingController _codeController = TextEditingController();
+  bool _isSending = false;
+  bool _isDeleting = false;
+  int _countdown = 0;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendCode() async {
+    if (_countdown > 0) return;
+
+    setState(() {
+      _isSending = true;
+    });
+
+    final success = await widget.controller.sendDeleteAccountEmailCode();
+
+    setState(() {
+      _isSending = false;
+    });
+
+    if (success) {
+      ToastUtil.showSuccess('验证码已发送到您的邮箱');
+      _startCountdown();
+    } else {
+      ToastUtil.showError('发送验证码失败，请重试');
+    }
+  }
+
+  void _startCountdown() {
+    setState(() {
+      _countdown = 60;
+    });
+
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return false;
+      setState(() {
+        _countdown--;
+      });
+      return _countdown > 0;
+    });
+  }
+
+  Future<void> _delete() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) {
+      ToastUtil.showInfo('请输入验证码');
+      return;
+    }
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    await widget.controller.deleteAccount(code);
+
+    if (mounted) {
+      setState(() {
+        _isDeleting = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('确认删除账户'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('删除账户后，所有数据将被永久删除，无法恢复。'),
+          const SizedBox(height: 16),
+          const Text('请先获取验证码，验证码将发送到您绑定的邮箱。'),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _codeController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  decoration: const InputDecoration(
+                    labelText: '验证码',
+                    hintText: '请输入验证码',
+                    border: OutlineInputBorder(),
+                    counterText: '',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 100,
+                child: ElevatedButton(
+                  onPressed: _countdown > 0 || _isSending ? null : _sendCode,
+                  child: Text(
+                    _isSending
+                        ? '发送中'
+                        : _countdown > 0
+                            ? '${_countdown}s'
+                            : '获取验证码',
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: _isDeleting ? null : () => Get.back(),
+          child: const Text('取消'),
+        ),
+        TextButton(
+          onPressed: _isDeleting ? null : _delete,
+          child: _isDeleting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('删除', style: TextStyle(color: Colors.red)),
+        ),
+      ],
     );
   }
 }

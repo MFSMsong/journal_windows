@@ -89,13 +89,34 @@ class UserService extends GetxService {
     }
   }
 
+  /// 发送删除账户验证码
+  Future<bool> sendDeleteAccountEmailCode() async {
+    try {
+      bool success = false;
+      await HttpRequest.post<Map<String, dynamic>>(
+        ApiConfig.sendDeleteAccountEmailCode(),
+        success: (data) {
+          success = true;
+        },
+        fail: (code, msg) {
+          print('发送删除账户验证码失败: code=$code, msg=$msg');
+        },
+      );
+      return success;
+    } catch (e) {
+      print('发送删除账户验证码失败: $e');
+      return false;
+    }
+  }
+
   /// 删除用户账户
-  Future<bool> deleteUser() async {
+  Future<bool> deleteUser(String code) async {
     isLoading.value = true;
     try {
       bool success = false;
       await HttpRequest.delete<Map<String, dynamic>>(
         ApiConfig.deleteUser(),
+        queryParameters: {'code': code},
         success: (data) {
           success = true;
         },

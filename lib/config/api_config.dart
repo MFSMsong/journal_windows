@@ -44,6 +44,9 @@ class ApiConfig {
   /// 更新用户信息
   static String updateUserInfo() => "$baseUrl/user";
   
+  /// 发送邮箱验证码（删除账户）
+  static String sendDeleteAccountEmailCode() => "$baseUrl/user/delete/emailCode";
+  
   /// 删除用户账户
   static String deleteUser() => "$baseUrl/user/delete";
 

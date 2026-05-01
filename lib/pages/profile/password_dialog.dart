@@ -41,18 +41,11 @@ class _PasswordDialogState extends State<PasswordDialog> {
 
   /// 发送验证码
   Future<void> _sendCode() async {
-    final user = UserService.to.currentUser.value;
-    if (user == null || user.email == null) {
-      ToastUtil.showError('用户邮箱信息不完整');
-      return; 
-    }
-
     setState(() => isSendingCode = true);
 
     try {
       await HttpRequest.post(
         ApiConfig.sendPasswordEmailCode(),
-        queryParameters: {'email': user.email},
         success: (_) {
           ToastUtil.showSuccess('验证码已发送');
           _startCountdown();
