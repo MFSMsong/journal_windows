@@ -32,6 +32,9 @@ class ToastUtil {
         borderRadius: 8,
         isDismissible: true,
         dismissDirection: DismissDirection.horizontal,
+        snackStyle: SnackStyle.FLOATING,
+        overlayBlur: 0,
+        overlayColor: Colors.transparent,
       );
     });
   }

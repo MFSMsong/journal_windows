@@ -54,7 +54,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20, color: Colors.white70),
-                  onPressed: () => Get.back(),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
@@ -73,7 +73,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Get.back(),
+                    onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white70,
                       side: const BorderSide(color: Colors.white30),
