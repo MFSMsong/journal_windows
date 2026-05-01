@@ -3,24 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/models/activity.dart';
+import 'package:journal_windows/models/expense.dart';
 import 'package:journal_windows/pages/expense/add_expense_controller.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 import 'package:journal_windows/utils/ui_util.dart';
+import 'package:journal_windows/widgets/cos_image.dart';
 
-/// 添加账单页面 - 浮动窗口形式
 class AddExpensePage extends StatelessWidget {
-  final Activity activity;
+  final Activity? activity;
+  final Expense? existingExpense;
   final VoidCallback? onClose;
 
   const AddExpensePage({
     super.key,
-    required this.activity,
+    this.activity,
+    this.existingExpense,
     this.onClose,
   });
 
+  bool get isEditMode => existingExpense != null;
+
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(AddExpenseController(activity));
+    final controller = Get.put(
+      AddExpenseController(activity: activity, existingExpense: existingExpense),
+      tag: existingExpense?.expenseId ?? DateTime.now().toString(),
+    );
 
     return Container(
       width: 480,
@@ -32,10 +40,8 @@ class AddExpensePage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 标题栏
           _buildHeader(controller),
           const SizedBox(height: 24),
-          // 可滚动内容区
           Flexible(
             child: SingleChildScrollView(
               child: Column(
@@ -59,14 +65,12 @@ class AddExpensePage extends StatelessWidget {
               ),
             ),
           ),
-          // 保存按钮
           _buildSaveButton(controller),
         ],
       ),
     );
   }
 
-  /// 构建标题栏
   Widget _buildHeader(AddExpenseController controller) {
     return Row(
       children: [
@@ -76,11 +80,11 @@ class AddExpensePage extends StatelessWidget {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),
-        const Expanded(
+        Expanded(
           child: Center(
             child: Text(
-              '记一笔',
-              style: TextStyle(
+              isEditMode ? '编辑账单' : '记一笔',
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -93,7 +97,6 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  /// 构建类型选择器
   Widget _buildTypeSelector(AddExpenseController controller) {
     return Obx(() => Container(
       decoration: BoxDecoration(
@@ -150,7 +153,6 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  /// 构建金额输入
   Widget _buildAmountInput(AddExpenseController controller) {
     return Obx(() => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +230,6 @@ class AddExpensePage extends StatelessWidget {
     ));
   }
 
-  /// 构建分类选择器（带图标）
   Widget _buildCategorySelector(AddExpenseController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +289,6 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  /// 构建备注输入
   Widget _buildNoteInput(AddExpenseController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +322,6 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  /// 构建日期选择器
   Widget _buildDatePicker(AddExpenseController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +361,6 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  /// 构建原价输入
   Widget _buildOriginalPriceInput(AddExpenseController controller) {
     return Obx(() {
       if (!controller.isExpense.value) return const SizedBox();
@@ -417,7 +415,6 @@ class AddExpensePage extends StatelessWidget {
     });
   }
 
-  /// 构建保存按钮
   Widget _buildSaveButton(AddExpenseController controller) {
     return Obx(() => SizedBox(
       width: double.infinity,
@@ -444,9 +441,9 @@ class AddExpensePage extends StatelessWidget {
                   Text('上传图片中...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               )
-            : const Text(
-                '保存',
-                style: TextStyle(
+            : Text(
+                isEditMode ? '保存修改' : '保存',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -455,7 +452,6 @@ class AddExpensePage extends StatelessWidget {
     ));
   }
 
-  /// 构建图片选择器
   Widget _buildImagePicker(AddExpenseController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,12 +481,17 @@ class AddExpensePage extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
+            ...controller.existingImagePaths.asMap().entries.map((entry) {
+              final index = entry.key;
+              final cosPath = entry.value;
+              return _buildExistingImageItem(cosPath, index, controller);
+            }),
             ...controller.selectedImagePaths.asMap().entries.map((entry) {
               final index = entry.key;
               final imagePath = entry.value;
-              return _buildImageItem(imagePath, index, controller);
+              return _buildNewImageItem(imagePath, index, controller);
             }),
-            if (controller.selectedImagePaths.length < 3)
+            if (controller.totalImageCount < 3)
               _buildAddImageButton(controller),
           ],
         )),
@@ -498,7 +499,50 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  Widget _buildImageItem(String imagePath, int index, AddExpenseController controller) {
+  Widget _buildExistingImageItem(String cosPath, int index, AddExpenseController controller) {
+    return Stack(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: CosImage(
+              cosPath: cosPath,
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Positioned(
+          right: -4,
+          top: -4,
+          child: GestureDetector(
+            onTap: () => controller.removeExistingImage(index),
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                size: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewImageItem(String imagePath, int index, AddExpenseController controller) {
     return Stack(
       children: [
         Container(
@@ -516,7 +560,7 @@ class AddExpensePage extends StatelessWidget {
           right: -4,
           top: -4,
           child: GestureDetector(
-            onTap: () => controller.removeImage(index),
+            onTap: () => controller.removeNewImage(index),
             child: Container(
               width: 20,
               height: 20,
@@ -572,7 +616,6 @@ class AddExpensePage extends StatelessWidget {
     );
   }
 
-  /// 选择日期
   Future<void> _selectDate(AddExpenseController controller) async {
     final date = await showDatePicker(
       context: Get.context!,
@@ -597,14 +640,18 @@ class AddExpensePage extends StatelessWidget {
     }
   }
 
-  /// 保存账单
   Future<void> _save(AddExpenseController controller) async {
-    // 先执行保存
     final success = await controller.save();
-
-    // 只有保存成功才关闭弹窗
     if (success) {
-      ToastUtil.closePage();
+      if (isEditMode) {
+        Get.closeAllSnackbars();
+        Get.back();
+        Get.back();
+        ToastUtil.showSuccess('修改成功');
+      } else {
+        ToastUtil.closePage();
+        ToastUtil.showSuccess('保存成功');
+      }
     }
   }
 }

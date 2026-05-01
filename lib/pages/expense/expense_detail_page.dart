@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:journal_windows/models/expense.dart';
 import 'package:journal_windows/models/activity.dart';
@@ -9,10 +8,9 @@ import 'package:journal_windows/services/user_service.dart';
 import 'package:journal_windows/utils/toast_util.dart';
 import 'package:journal_windows/utils/ui_util.dart';
 import 'package:journal_windows/widgets/cos_image.dart';
-import 'package:intl/intl.dart';
+import 'package:journal_windows/pages/expense/add_expense_page.dart';
 
-/// 账单详情/编辑页面
-class ExpenseDetailPage extends StatefulWidget {
+class ExpenseDetailPage extends StatelessWidget {
   final Expense expense;
   final Activity activity;
 
@@ -23,61 +21,12 @@ class ExpenseDetailPage extends StatefulWidget {
   });
 
   @override
-  State<ExpenseDetailPage> createState() => _ExpenseDetailPageState();
-}
-
-class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
-  late TextEditingController _noteController;
-  late TextEditingController _amountController;
-  late TextEditingController _originalPriceController;
-
-  bool _isEditing = false;
-  bool _isSaving = false;
-
-  late bool _isExpense;
-  late String _selectedCategory;
-  late DateTime _selectedDate;
-
-  final currentUserId = UserService.to.currentUser.value?.userId ?? '';
-  bool get isCreator => widget.activity.userId == currentUserId;
-  bool get isExpenseOwner => widget.expense.userId == currentUserId;
-  bool get canEdit => isCreator || isExpenseOwner;
-
-  List<String> get expenseCategories => [
-    '餐饮', '交通', '购物', '娱乐', '医疗',
-    '教育', '住房', '通讯', '水电', '其他'
-  ];
-
-  List<String> get incomeCategories => [
-    '工资', '奖金', '投资', '兼职', '红包', '其他'
-  ];
-
-  List<String> get categories => _isExpense ? expenseCategories : incomeCategories;
-
-  @override
-  void initState() {
-    super.initState();
-    _isExpense = widget.expense.isExpense;
-    _selectedCategory = widget.expense.type;
-    _selectedDate = DateTime.tryParse(widget.expense.expenseTime) ?? DateTime.now();
-
-    _noteController = TextEditingController(text: widget.expense.label);
-    _amountController = TextEditingController(text: widget.expense.price.toStringAsFixed(2));
-    _originalPriceController = TextEditingController(
-      text: widget.expense.originalPrice?.toStringAsFixed(2) ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    _amountController.dispose();
-    _originalPriceController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final currentUserId = UserService.to.currentUser.value?.userId ?? '';
+    final isCreator = activity.userId == currentUserId;
+    final isExpenseOwner = expense.userId == currentUserId;
+    final canEdit = isCreator || isExpenseOwner;
+
     return Dialog(
       backgroundColor: const Color(0xFF2D3E50),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -95,13 +44,11 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             const SizedBox(height: 24),
             Flexible(
               child: SingleChildScrollView(
-                child: _isEditing
-                    ? _buildEditContent()
-                    : _buildViewContent(),
+                child: _buildViewContent(),
               ),
             ),
             const SizedBox(height: 24),
-            _buildBottomButton(),
+            if (canEdit) _buildBottomButton(),
           ],
         ),
       ),
@@ -120,7 +67,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
         Expanded(
           child: Center(
             child: Text(
-              _isEditing ? '编辑账单' : '账单详情',
+              '账单详情',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -135,9 +82,8 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
   }
 
   Widget _buildViewContent() {
-    final expense = widget.expense;
-    final isExpense = expense.isExpense;
-    final color = isExpense ? Colors.red : Colors.green;
+    final isExpenseType = expense.isExpense;
+    final color = isExpenseType ? Colors.red : Colors.green;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +125,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isExpense ? '支出' : '收入',
+                      isExpenseType ? '支出' : '收入',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.6),
@@ -189,7 +135,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                 ),
               ),
               Text(
-                '${isExpense ? "-" : "+"}¥${expense.price.toStringAsFixed(2)}',
+                '${isExpenseType ? "-" : "+"}¥${expense.price.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -282,7 +228,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
 
   void _showImagePreview(String cosPath) {
     showDialog(
-      context: context,
+      context: Get.context!,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Stack(
@@ -307,510 +253,103 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
     );
   }
 
-  Widget _buildEditContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTypeSelector(),
-        const SizedBox(height: 24),
-        _buildAmountInput(),
-        const SizedBox(height: 24),
-        _buildCategorySelector(),
-        const SizedBox(height: 24),
-        _buildNoteInput(),
-        const SizedBox(height: 24),
-        _buildDatePicker(),
-        if (_isExpense) ...[
-          const SizedBox(height: 24),
-          _buildOriginalPriceInput(),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildTypeSelector() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildTypeButton(
-              '支出',
-              _isExpense,
-              () => _setType(true),
-              Colors.red,
-            ),
-          ),
-          Expanded(
-            child: _buildTypeButton(
-              '收入',
-              !_isExpense,
-              () => _setType(false),
-              Colors.green,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeButton(String label, bool isSelected, VoidCallback onTap, Color color) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? Colors.white : Colors.white70,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _setType(bool isExpense) {
-    setState(() {
-      _isExpense = isExpense;
-      if (!categories.contains(_selectedCategory)) {
-        _selectedCategory = categories.first;
-      }
-    });
-  }
-
-  Widget _buildAmountInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '金额',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _amountController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-          ],
-          style: const TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
-            prefixText: '¥ ',
-            prefixStyle: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-            hintText: '0.00',
-            hintStyle: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategorySelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '分类',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: categories.map((category) {
-            final isSelected = _selectedCategory == category;
-            final icon = UiUtil.getExpenseIcon(category);
-            return GestureDetector(
-              onTap: () => setState(() => _selectedCategory = category),
-              child: Container(
-                width: 72,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).primaryColor.withValues(alpha: 0.9)
-                      : Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: isSelected
-                      ? Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1)
-                      : null,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(icon, style: const TextStyle(fontSize: 28)),
-                    const SizedBox(height: 6),
-                    Text(
-                      category,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isSelected ? Colors.white : Colors.white70,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNoteInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '备注',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _noteController,
-          maxLines: 2,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
-            hintText: '添加备注...',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.all(16),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '日期',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        InkWell(
-          onTap: _selectDate,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 20, color: Colors.white70),
-                const SizedBox(width: 12),
-                Text(
-                  _selectedDate.toString().split(' ').first,
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                const Spacer(),
-                const Icon(Icons.arrow_drop_down, color: Colors.white70),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOriginalPriceInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              '原价（可选）',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '用于记录折扣',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _originalPriceController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-          ],
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
-            prefixText: '¥ ',
-            prefixStyle: const TextStyle(color: Colors.white70),
-            hintText: '如有折扣可填写原价',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildBottomButton() {
-    if (!canEdit) {
-      return const SizedBox.shrink();
-    }
-
-    if (_isEditing) {
-      return Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: _isSaving ? null : () => setState(() => _isEditing = false),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('取消'),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF2D3E50),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('保存', style: TextStyle(fontWeight: FontWeight.w600)),
-            ),
-          ),
-        ],
-      );
-    }
-
     return Row(
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: () => setState(() => _isEditing = true),
+            onPressed: _openEditPage,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF2D3E50),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('编辑', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: const Text('编辑'),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _showDeleteConfirm,
-            icon: const Icon(Icons.delete_outline, size: 18),
-            label: const Text('删除'),
+          child: OutlinedButton(
+            onPressed: _deleteExpense,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.red,
-              side: const BorderSide(color: Colors.red),
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
+            child: const Text('删除'),
           ),
         ),
       ],
     );
   }
 
-  Future<void> _selectDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF2D3E50),
-              surface: Color(0xFF2D3E50),
-            ),
+  void _openEditPage() {
+    showDialog(
+      context: Get.context!,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF2D3E50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: AddExpensePage(
+          activity: activity,
+          existingExpense: expense,
+          onClose: () => Get.back(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteExpense() async {
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: const Color(0xFF2D3E50),
+        title: const Text('确认删除', style: TextStyle(color: Colors.white)),
+        content: const Text('确定要删除这条账单吗？', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('取消', style: TextStyle(color: Colors.white70)),
           ),
-          child: child!,
-        );
-      },
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('删除', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
 
-    if (date != null) {
-      setState(() => _selectedDate = date);
+    if (confirm == true) {
+      final success = await ExpenseService.to.deleteExpense(expense.expenseId, activity.activityId);
+      if (success) {
+        ToastUtil.showSuccess('删除成功');
+        Get.back();
+        final expenseListController = Get.find<ExpenseListController>();
+        await expenseListController.loadActivities();
+      }
     }
   }
 
   String _formatTime(String time) {
     try {
       final dateTime = DateTime.parse(time);
-      return DateFormat('yyyy年MM月dd日 HH:mm').format(dateTime);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+      String dateStr;
+      if (date == today) {
+        dateStr = '今天';
+      } else if (date == today.subtract(const Duration(days: 1))) {
+        dateStr = '昨天';
+      } else {
+        dateStr = '${dateTime.month}月${dateTime.day}日';
+      }
+
+      final timeStr = '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      return '$dateStr $timeStr';
     } catch (e) {
       return time;
     }
-  }
-
-  Future<void> _save() async {
-    final amountText = _amountController.text.trim();
-    final amount = double.tryParse(amountText);
-    if (amount == null || amount <= 0) {
-      ToastUtil.showError('请输入有效金额');
-      return;
-    }
-
-    if (_selectedCategory.isEmpty) {
-      ToastUtil.showInfo('请选择分类');
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-
-    final updatedExpense = Expense(
-      expenseId: widget.expense.expenseId,
-      type: _selectedCategory,
-      price: amount,
-      originalPrice: _originalPriceController.text.isNotEmpty
-          ? double.tryParse(_originalPriceController.text)
-          : null,
-      label: _noteController.text.trim(),
-      userId: widget.expense.userId,
-      activityId: widget.expense.activityId,
-      positive: _isExpense ? 0 : 1,
-      expenseTime: dateFormat.format(_selectedDate),
-      createTime: widget.expense.createTime,
-      userNickname: widget.expense.userNickname,
-      userAvatar: widget.expense.userAvatar,
-    );
-
-    await ExpenseService.to.updateExpense(
-      updatedExpense,
-      onSuccess: (msg) async {
-        setState(() => _isSaving = false);
-        final expenseListController = Get.find<ExpenseListController>();
-        await expenseListController.loadActivities();
-        ToastUtil.closePage(result: true);
-      },
-      onFail: (msg) {
-        setState(() => _isSaving = false);
-        ToastUtil.showError(msg);
-      },
-    );
-  }
-
-  void _showDeleteConfirm() {
-    Get.dialog(
-      AlertDialog(
-        backgroundColor: const Color(0xFF2D3E50),
-        title: const Text('确认删除', style: TextStyle(color: Colors.white)),
-        content: Text(
-          '确定要删除这条${widget.expense.isExpense ? '支出' : '收入'}记录吗？\n金额：¥${widget.expense.price.toStringAsFixed(2)}',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => ToastUtil.closePage(),
-            child: Text('取消', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
-          ),
-          TextButton(
-            onPressed: () {
-              ToastUtil.closePage();
-              _deleteExpense();
-            },
-            child: const Text('删除', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _deleteExpense() async {
-    await ExpenseService.to.deleteExpense(
-      widget.expense.expenseId,
-      widget.expense.activityId,
-      onSuccess: (msg) async {
-        final expenseListController = Get.find<ExpenseListController>();
-        await expenseListController.loadActivities();
-        ToastUtil.closePage(result: true);
-      },
-      onFail: (msg) {
-        ToastUtil.showError(msg);
-      },
-    );
   }
 }
