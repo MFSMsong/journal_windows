@@ -149,11 +149,7 @@ class ProfilePage extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _buildInfoItem(
-                      Icons.phone_outlined,
-                      '手机号',
-                      user.telephone ?? '未设置',
-                    ),
+                    child: _buildEmailInfoItem(controller, user.email),
                   ),
                   Expanded(
                     child: _buildInfoItem(
@@ -200,6 +196,74 @@ class ProfilePage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// 构建邮箱信息项（支持密文切换）
+  Widget _buildEmailInfoItem(ProfileController controller, String? email) {
+    return Obx(() {
+      final isVisible = controller.isEmailVisible.value;
+      final displayEmail = _maskEmail(email, isVisible);
+      
+      return Row(
+        children: [
+          Icon(Icons.email_outlined, size: 18, color: Colors.grey[500]),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '邮箱',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    displayEmail,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (email != null && email.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: controller.toggleEmailVisibility,
+                      child: Icon(
+                        isVisible ? Icons.visibility : Icons.visibility_off,
+                        size: 16,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+    });
+  }
+
+  /// 邮箱脱敏处理
+  String _maskEmail(String? email, bool isVisible) {
+    if (email == null || email.isEmpty) return '未设置';
+    if (isVisible) return email;
+    
+    final parts = email.split('@');
+    if (parts.length != 2) return email;
+    
+    final name = parts[0];
+    final domain = parts[1];
+    
+    if (name.length <= 2) {
+      return '${name[0]}***@$domain';
+    }
+    
+    return '${name.substring(0, 2)}***@$domain';
   }
 
   /// 构建设置卡片
@@ -343,14 +407,14 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('关于好享记账'),
+        title: const Text('关于财务系统'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('版本: 1.0.0'),
             SizedBox(height: 8),
-            Text('好享记账是一款多人协作记账应用，支持：'),
+            Text('财务系统是一款多人协作记账应用，支持：'),
             SizedBox(height: 4),
             Text('• 多人协作记账'),
             Text('• AI智能记账'),

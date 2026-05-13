@@ -74,6 +74,10 @@ class _ActivityPageState extends State<ActivityPage> {
           _buildDescriptionInput(controller!, canEdit),
           if (activity != null) ...[
             const SizedBox(height: 24),
+            _buildStatisticsSection(),
+          ],
+          if (activity != null) ...[
+            const SizedBox(height: 24),
             _buildMembersSection(),
           ],
           const SizedBox(height: 32),
@@ -120,6 +124,10 @@ class _ActivityPageState extends State<ActivityPage> {
                       _buildBudgetInput(controller!, canEdit, isDialog: true),
                       const SizedBox(height: 24),
                       _buildDescriptionInput(controller!, canEdit, isDialog: true),
+                      if (activity != null) ...[
+                        const SizedBox(height: 24),
+                        _buildStatisticsSection(isDialog: true),
+                      ],
                       if (activity != null) ...[
                         const SizedBox(height: 24),
                         _buildMembersSection(isDialog: true),
@@ -329,6 +337,172 @@ class _ActivityPageState extends State<ActivityPage> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建统计信息区域
+  Widget _buildStatisticsSection({bool isDialog = false}) {
+    final totalExpense = activity?.totalExpense ?? 0;
+    final totalIncome = activity?.totalIncome ?? 0;
+    final balance = totalIncome - totalExpense;
+    final budget = activity?.budget ?? 0;
+    final hasBudget = budget > 0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '账本统计',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDialog ? Colors.white : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDialog ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem(
+                      '总支出',
+                      totalExpense,
+                      Colors.red,
+                      isDialog,
+                      isExpense: true,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: isDialog ? Colors.white24 : Colors.grey[300],
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      '总收入',
+                      totalIncome,
+                      Colors.green,
+                      isDialog,
+                      isExpense: false,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: isDialog ? Colors.white24 : Colors.grey[300],
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      '结余',
+                      balance.abs(),
+                      balance >= 0 ? Colors.blue : Colors.orange,
+                      isDialog,
+                      isExpense: balance < 0,
+                      prefix: balance < 0 ? '-' : '',
+                    ),
+                  ),
+                ],
+              ),
+              if (hasBudget) ...[
+                const SizedBox(height: 16),
+                _buildBudgetProgress(totalExpense, budget, isDialog),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建统计项
+  Widget _buildStatItem(
+    String label,
+    double value,
+    Color color,
+    bool isDialog, {
+    bool isExpense = false,
+    String prefix = '',
+  }) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDialog ? Colors.white54 : Colors.grey[500],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$prefix¥${value.toStringAsFixed(2)}',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isDialog ? Colors.white : color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建预算进度条
+  Widget _buildBudgetProgress(double totalExpense, double budget, bool isDialog) {
+    final usagePercent = budget > 0 ? (totalExpense / budget * 100).clamp(0, 100) : 0.0;
+    final remaining = budget - totalExpense;
+    final isOverBudget = remaining < 0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '预算使用',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDialog ? Colors.white54 : Colors.grey[500],
+              ),
+            ),
+            Text(
+              isOverBudget 
+                  ? '已超支 ¥${remaining.abs().toStringAsFixed(2)}'
+                  : '剩余 ¥${remaining.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isOverBudget ? Colors.red : (isDialog ? Colors.white70 : Colors.grey[700]),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: usagePercent / 100,
+            backgroundColor: isDialog ? Colors.white24 : Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(
+              isOverBudget ? Colors.red : (usagePercent > 80 ? Colors.orange : Colors.green),
+            ),
+            minHeight: 6,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '预算 ¥${budget.toStringAsFixed(2)} · 已用 ${usagePercent.toStringAsFixed(1)}%',
+          style: TextStyle(
+            fontSize: 11,
+            color: isDialog ? Colors.white38 : Colors.grey[400],
           ),
         ),
       ],

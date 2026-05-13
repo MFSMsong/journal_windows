@@ -136,6 +136,9 @@ class ApiConfig {
   static String getChartsWeeklyType(String activityId) => 
       "$baseUrl/charts/weekly/type/$activityId";
   
+  /// 获取聚合统计数据（统一接口）
+  static String getChartsAggregate(String activityId) => "$baseUrl/charts/aggregate/$activityId";
+  
   /// 导出Excel
   static String exportCharts(String activityId) => "$baseUrl/charts/export/$activityId";
 
@@ -164,6 +167,9 @@ class ApiConfig {
   
   /// 获取资产变动记录
   static String getAssetRecords(String assetId) => "$baseUrl/asset/$assetId/records";
+
+  /// 获取资产年度趋势
+  static String get getAssetTrend => "$baseUrl/asset/trend";
 
   // ============ AI相关接口 ============
 

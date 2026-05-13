@@ -9,6 +9,14 @@ import 'package:journal_windows/routers.dart';
 class ProfileController extends GetxController {
   final UserService userService = UserService.to;
 
+  /// 邮箱是否显示明文
+  final isEmailVisible = false.obs;
+
+  /// 切换邮箱显示状态
+  void toggleEmailVisibility() {
+    isEmailVisible.value = !isEmailVisible.value;
+  }
+
   /// 刷新用户信息
   Future<void> refreshUserProfile() async {
     await userService.getUserProfile();

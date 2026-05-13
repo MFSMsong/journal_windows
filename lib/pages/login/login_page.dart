@@ -69,7 +69,7 @@ class LoginPage extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         const Text(
-          '好享记账',
+          '财务系统',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,

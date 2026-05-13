@@ -3,7 +3,6 @@ import 'package:journal_windows/models/charts_data_node.dart';
 import 'package:journal_windows/request/request.dart';
 import 'package:journal_windows/config/api_config.dart';
 
-/// 图表服务
 class ChartsService extends GetxService {
   static ChartsService get to => Get.find();
   
@@ -12,7 +11,6 @@ class ChartsService extends GetxService {
   final RxList<ChartsDataNode> typeExpenses = <ChartsDataNode>[].obs;
   final RxBool isLoading = false.obs;
 
-  /// 获取周支出统计
   Future<List<ChartsDataNode>> getWeeklyExpenses(String activityId) async {
     isLoading.value = true;
     try {
@@ -32,7 +30,6 @@ class ChartsService extends GetxService {
     return [];
   }
 
-  /// 获取周收入统计
   Future<List<ChartsDataNode>> getWeeklyIncome(String activityId) async {
     isLoading.value = true;
     try {
@@ -52,7 +49,6 @@ class ChartsService extends GetxService {
     return [];
   }
 
-  /// 获取分类统计
   Future<List<ChartsDataNode>> getTypeExpenses(String activityId) async {
     isLoading.value = true;
     try {
@@ -72,7 +68,6 @@ class ChartsService extends GetxService {
     return [];
   }
 
-  /// 加载所有图表数据
   Future<void> loadAllCharts(String activityId) async {
     await Future.wait([
       getWeeklyExpenses(activityId),
@@ -81,26 +76,86 @@ class ChartsService extends GetxService {
     ]);
   }
 
-  /// 计算总支出
+  Future<ChartsAggregateResult?> getAggregate({
+    required String activityId,
+    required String period,
+    int? year,
+    int? month,
+    String? startDate,
+    String typeMode = 'expense',
+  }) async {
+    isLoading.value = true;
+    try {
+      final queryParams = <String, dynamic>{
+        'period': period,
+        'typeMode': typeMode,
+      };
+      
+      if (year != null) queryParams['year'] = year;
+      if (month != null) queryParams['month'] = month;
+      if (startDate != null) queryParams['startDate'] = startDate;
+
+      final result = await HttpRequest.get<Map<String, dynamic>>(
+        ApiConfig.getChartsAggregate(activityId),
+        queryParameters: queryParams,
+      );
+      
+      if (result != null) {
+        return ChartsAggregateResult.fromJson(result);
+      }
+    } catch (e) {
+      print('获取聚合统计失败: $e');
+    } finally {
+      isLoading.value = false;
+    }
+    return null;
+  }
+
   double getTotalExpense() {
     return weeklyExpenses.fold(0.0, (sum, item) => sum + item.value);
   }
 
-  /// 计算总收入
   double getTotalIncome() {
     return weeklyIncome.fold(0.0, (sum, item) => sum + item.value);
   }
 
-  /// 计算分类总支出
   double getTotalByType() {
     return typeExpenses.fold(0.0, (sum, item) => sum + item.value);
   }
 
-  /// 清理缓存 - 退出登录时调用
   void clearCache() {
     weeklyExpenses.clear();
     weeklyIncome.clear();
     typeExpenses.clear();
     isLoading.value = false;
+  }
+}
+
+class ChartsAggregateResult {
+  final List<ChartsDataNode> expenses;
+  final List<ChartsDataNode> income;
+  final List<ChartsDataNode> types;
+
+  ChartsAggregateResult({
+    required this.expenses,
+    required this.income,
+    required this.types,
+  });
+
+  factory ChartsAggregateResult.fromJson(Map<String, dynamic> json) {
+    return ChartsAggregateResult(
+      expenses: (json['expenses'] as List<dynamic>?)
+              ?.map((e) => ChartsDataNode.fromJson(e))
+              .toList() ??
+          [],
+      income: (json['income'] as List<dynamic>?)
+              ?.map((e) => ChartsDataNode.fromJson(e))
+              .toList() ??
+          [],
+      types: (json['types'] as List<dynamic>?)
+              ?.map((e) => ChartsDataNode.fromJson(e))
+              .toList() ??
+          [],
+    );
   }
 }

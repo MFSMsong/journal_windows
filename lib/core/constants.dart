@@ -1,7 +1,7 @@
 /// 应用常量
 class AppConstants {
   /// 应用名称
-  static const String appName = '好享记账';
+  static const String appName = '财务系统';
 
   /// 应用版本
   static const String appVersion = '1.0.0';

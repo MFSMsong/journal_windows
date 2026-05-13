@@ -33,7 +33,7 @@ Widget buildApp() {
     splitScreenMode: true,
     builder: (context, child) {
       return GetMaterialApp(
-        title: '好享记账',
+        title: '财务系统',
         debugShowCheckedModeBanner: false,
         theme: _buildLightTheme(),
         darkTheme: _buildDarkTheme(),

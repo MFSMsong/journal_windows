@@ -98,7 +98,294 @@ class ChartsPage extends StatelessWidget {
           Expanded(
             child: _buildPeriodChip('年', 'year', controller),
           ),
+          const SizedBox(width: 16),
+          _buildTimeSelector(controller),
         ],
+      ),
+    );
+  }
+
+  /// 构建时间选择器
+  Widget _buildTimeSelector(ChartsController controller) {
+    return Obx(() {
+      switch (controller.selectedPeriod.value) {
+        case 'week':
+          return _buildWeekSelector(controller);
+        case 'month':
+          return _buildMonthSelector(controller);
+        case 'year':
+          return _buildYearSelector(controller);
+        default:
+          return const SizedBox.shrink();
+      }
+    });
+  }
+
+  /// 构建周选择器
+  Widget _buildWeekSelector(ChartsController controller) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left, size: 20),
+          onPressed: controller.previousWeek,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+        GestureDetector(
+          onTap: () => _showWeekPicker(controller),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  controller.getWeekDescription(),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey[600]),
+              ],
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right, size: 20),
+          onPressed: controller.nextWeek,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+      ],
+    );
+  }
+
+  /// 显示周选择器（日期选择）
+  Future<void> _showWeekPicker(ChartsController controller) async {
+    final selectedDate = await showDatePicker(
+      context: Get.context!,
+      initialDate: controller.getSelectedWeekStartDate(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      locale: const Locale('zh', 'CN'),
+      helpText: '选择日期',
+      confirmText: '确定',
+      cancelText: '取消',
+    );
+    
+    if (selectedDate != null) {
+      controller.setWeekByDate(selectedDate);
+    }
+  }
+
+  /// 构建月选择器
+  Widget _buildMonthSelector(ChartsController controller) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left, size: 20),
+          onPressed: controller.previousMonth,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+        GestureDetector(
+          onTap: () => _showMonthPicker(controller),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${controller.selectedYear.value}年${controller.selectedMonth.value}月',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey[600]),
+              ],
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right, size: 20),
+          onPressed: controller.nextMonth,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+      ],
+    );
+  }
+
+  /// 构建年选择器
+  Widget _buildYearSelector(ChartsController controller) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left, size: 20),
+          onPressed: controller.previousYear,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+        GestureDetector(
+          onTap: () => _showYearPicker(controller),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${controller.selectedYear.value}年',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey[600]),
+              ],
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right, size: 20),
+          onPressed: controller.nextYear,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+      ],
+    );
+  }
+
+  /// 显示月份选择器
+  void _showMonthPicker(ChartsController controller) {
+    int tempYear = controller.selectedYear.value;
+    
+    Get.dialog(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('选择月份'),
+            content: SizedBox(
+              width: 280,
+              height: 300,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: () {
+                          setState(() => tempYear--);
+                        },
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Text(
+                          '$tempYear年',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: () {
+                          setState(() => tempYear++);
+                        },
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      children: List.generate(12, (index) {
+                        final month = index + 1;
+                        final isSelected = controller.selectedYear.value == tempYear && 
+                                           controller.selectedMonth.value == month;
+                        return InkWell(
+                          onTap: () {
+                            controller.selectedYear.value = tempYear;
+                            controller.setMonth(month);
+                            Get.back();
+                          },
+                          child: Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFF2D3E50) : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$month月',
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.grey[700],
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// 显示年份选择器
+  void _showYearPicker(ChartsController controller) {
+    final currentYear = DateTime.now().year;
+    final years = List.generate(21, (index) => currentYear - 10 + index);
+    
+    Get.dialog(
+      AlertDialog(
+        title: const Text('选择年份'),
+        content: SizedBox(
+          width: 280,
+          height: 300,
+          child: GridView.count(
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            children: years.map((year) {
+              final isSelected = controller.selectedYear.value == year;
+              return InkWell(
+                onTap: () {
+                  controller.setYear(year);
+                  Get.back();
+                },
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF2D3E50) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$year',
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey[700],
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
@@ -378,11 +665,8 @@ class ChartsPage extends StatelessWidget {
     IconData icon,
   ) {
     return Obx(() {
-      final title = controller.selectedPeriod.value == 'week'
-          ? (isExpense ? '本周支出' : '本周收入')
-          : controller.selectedPeriod.value == 'month'
-              ? (isExpense ? '本月支出' : '本月收入')
-              : (isExpense ? '本年支出' : '本年收入');
+      final timeDesc = controller.getSelectedTimeDescription();
+      final title = isExpense ? '$timeDesc支出' : '$timeDesc收入';
       final value = isExpense
           ? '¥${controller.getCurrentPeriodExpense().toStringAsFixed(2)}'
           : '¥${controller.getCurrentPeriodIncome().toStringAsFixed(2)}';
@@ -548,17 +832,16 @@ class ChartsPage extends StatelessWidget {
 
   /// 构建趋势图表标题（带响应式更新）
   Widget _buildTrendChartTitle(ChartsController controller) {
-    return Obx(() => Text(
-      controller.selectedPeriod.value == 'week'
-          ? '本周收支趋势'
-          : controller.selectedPeriod.value == 'month'
-              ? '本月收支趋势'
-              : '本年收支趋势',
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
-    ));
+    return Obx(() {
+      final timeDesc = controller.getSelectedTimeDescription();
+      return Text(
+        '$timeDesc收支趋势',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+    });
   }
 
   /// 构建图表显示模式切换按钮

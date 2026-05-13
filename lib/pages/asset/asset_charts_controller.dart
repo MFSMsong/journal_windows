@@ -11,6 +11,7 @@ class AssetChartsController extends GetxController {
 
   final trendData = <MapEntry<String, double>>[].obs;
   final distributionData = <AssetDistributionItem>[].obs;
+  final isLoadingTrend = false.obs;
 
   static const int typeCash = 1;
   static const int typeSavingsCard = 2;
@@ -30,18 +31,14 @@ class AssetChartsController extends GetxController {
   void onInit() {
     super.onInit();
     loadData();
-    ever(assetService.assets, (_) => _processData());
-    ever(assetService.overview, (_) => _processData());
+    ever(assetService.assets, (_) => _calculateDistribution());
+    ever(assetService.overview, (_) => _calculateDistribution());
   }
 
   Future<void> loadData() async {
     await assetService.refresh();
-    _processData();
-  }
-
-  void _processData() {
     _calculateDistribution();
-    _generateTrendData();
+    await _loadTrendData();
   }
 
   void _calculateDistribution() {
@@ -92,73 +89,28 @@ class AssetChartsController extends GetxController {
     }
   }
 
-  void _generateTrendData() {
-    final data = <MapEntry<String, double>>[];
-    final year = selectedYear.value;
-    final currentYear = DateTime.now().year;
-    final currentMonth = DateTime.now().month;
-
-    final currentValue = _getTotalValue();
-    
-    final filteredAssets = _getFilteredAssets();
-    
-    int? earliestYear;
-    int? earliestMonth;
-    
-    for (final asset in filteredAssets) {
-      if (asset.createTime.isNotEmpty) {
-        try {
-          final createDate = DateTime.parse(asset.createTime);
-          if (earliestYear == null || 
-              createDate.year < earliestYear || 
-              (createDate.year == earliestYear && createDate.month < earliestMonth!)) {
-            earliestYear = createDate.year;
-            earliestMonth = createDate.month;
-          }
-        } catch (e) {
-          // 解析失败，忽略
-        }
-      }
+  Future<void> _loadTrendData() async {
+    isLoadingTrend.value = true;
+    try {
+      final data = await assetService.getYearlyTrend(selectedYear.value, selectedTab.value);
+      trendData.value = data;
+    } finally {
+      isLoadingTrend.value = false;
     }
-
-    for (int month = 1; month <= 12; month++) {
-      final label = '${month.toString().padLeft(2, '0')}月';
-      
-      if (year == currentYear) {
-        if (month > currentMonth) {
-          data.add(MapEntry(label, 0));
-        } else if (earliestYear == null || year < earliestYear) {
-          data.add(MapEntry(label, currentValue));
-        } else if (year == earliestYear && month < earliestMonth!) {
-          data.add(MapEntry(label, 0));
-        } else {
-          data.add(MapEntry(label, currentValue));
-        }
-      } else {
-        if (earliestYear == null || year < earliestYear) {
-          data.add(MapEntry(label, 0));
-        } else if (year == earliestYear && month < earliestMonth!) {
-          data.add(MapEntry(label, 0));
-        } else {
-          data.add(MapEntry(label, currentValue));
-        }
-      }
-    }
-
-    trendData.value = data;
   }
 
   void setTab(String tab) {
     if (selectedTab.value != tab) {
       selectedTab.value = tab;
-      _processData();
+      _calculateDistribution();
+      _loadTrendData();
     }
   }
 
   void setYear(int year) {
     if (selectedYear.value != year) {
       selectedYear.value = year;
-      _generateTrendData();
+      _loadTrendData();
     }
   }
 

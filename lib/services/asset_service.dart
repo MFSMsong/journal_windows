@@ -147,6 +147,30 @@ class AssetService extends GetxService {
     return [];
   }
 
+  Future<List<MapEntry<String, double>>> getYearlyTrend(int year, String type) async {
+    try {
+      final result = await HttpRequest.get<List<dynamic>>(
+        ApiConfig.getAssetTrend,
+        queryParameters: {
+          'year': year,
+          'type': type,
+        },
+      );
+      if (result != null) {
+        return result.map((e) {
+          final map = e as Map<String, dynamic>;
+          return MapEntry<String, double>(
+            map['label'] as String,
+            (map['value'] as num).toDouble(),
+          );
+        }).toList();
+      }
+    } catch (e) {
+      Log().e('获取资产趋势失败: $e');
+    }
+    return [];
+  }
+
   Future<void> refresh() async {
     await Future.wait([
       getOverview(),

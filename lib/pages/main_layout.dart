@@ -68,7 +68,7 @@ class MainLayout extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '好享记账',
+                '财务系统',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

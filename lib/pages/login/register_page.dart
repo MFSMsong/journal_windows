@@ -75,7 +75,7 @@ class RegisterPage extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '创建您的好享记账账号',
+          '创建您的财务系统账号',
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],
